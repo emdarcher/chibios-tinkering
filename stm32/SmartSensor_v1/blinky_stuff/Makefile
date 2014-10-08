@@ -199,6 +199,8 @@ ULIBS =
 #
 # End of user defines
 ##############################################################################
-
 RULESPATH = $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC
 include $(RULESPATH)/rules.mk
+MY_STM32_PATH = ../../../stm32
+include $(MY_STM32_PATH)/my_extras.mk
+
