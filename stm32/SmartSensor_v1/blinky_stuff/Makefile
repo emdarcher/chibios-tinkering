@@ -82,7 +82,7 @@ PROJECT = ch
 # Imported source files and paths
 CHIBIOS = ../../../../forks/ChibiOS-RT
 include $(CHIBIOS)/os/hal/hal.mk
-include $(CHIBIOS)/os/hal/boards/OLIMEX_STM32_P103/board.mk
+include $(CHIBIOS)/os/hal/boards/SMARTSENSOR_V1_STM32_F103C8/board.mk
 include $(CHIBIOS)/os/hal/ports/STM32/STM32F1xx/platform.mk
 include $(CHIBIOS)/os/hal/osal/rt/osal.mk
 include $(CHIBIOS)/os/rt/rt.mk
@@ -90,7 +90,7 @@ include $(CHIBIOS)/os/rt/ports/ARMCMx/compilers/GCC/mk/port_stm32f1xx.mk
 include $(CHIBIOS)/test/rt/test.mk
 
 # Define linker script file here
-LDSCRIPT = $(PORTLD)/STM32F103xB.ld
+LDSCRIPT = $(PORTLD)/STM32F103x8.ld
 
 # C sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
