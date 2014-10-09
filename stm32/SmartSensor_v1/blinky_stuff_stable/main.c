@@ -23,25 +23,37 @@ static THD_FUNCTION(Thread1, arg) {
 }
 #endif
 
+/*
+ * Red LED blinker thread, times are in milliseconds.
+ */
+static WORKING_AREA(waThread1, 128);
+static msg_t Thread1(void *arg) {
+
+  (void)arg;
+  chRegSetThreadName("blinker");
+  while (TRUE) {
+    palClearPad(GPIOA, GPIOA_PA2);
+    chThdSleepMilliseconds(500);
+    palSetPad(GPIOA, GPIOA_PA2);
+    chThdSleepMilliseconds(500);
+  }
+}
+
 int main(void){
     
     halInit();
     chSysInit();
     
-    //chThdCreateStatic(waThread1, sizeof(waThread1), NORMALPRIO+1, Thread1, NULL);
+    chThdCreateStatic(waThread1, sizeof(waThread1), NORMALPRIO+1, Thread1, NULL);
 
 
+     palSetPadMode(GPIOA, GPIOA_PA2, PAL_MODE_OUTPUT_PUSHPULL);
     palSetPadMode(GPIOA, 3, PAL_MODE_OUTPUT_PUSHPULL);
 
     while (TRUE){
         palSetPad(GPIOA, 3);
         chThdSleepMilliseconds(500);
-        //volatile unsigned int i = 1000000;
-        //while(i--);
         palClearPad(GPIOA, 3);
-        //volatile unsigned int 
-        //i = 1000000;
-        //while(i--);
         chThdSleepMilliseconds(500);
     }
 }
