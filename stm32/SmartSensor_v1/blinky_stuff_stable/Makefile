@@ -30,7 +30,7 @@ endif
 
 # Enable this if you want link time optimizations (LTO)
 ifeq ($(USE_LTO),)
-  USE_LTO = yes
+  USE_LTO = no
 endif
 
 # If enabled, this option allows to compile the application in THUMB mode.
@@ -85,20 +85,22 @@ PROJECT = ch
 # Imported source files and paths
 #CHIBIOS = ../../../../forks/ChibiOS-RT
 CHIBIOS = ../../../../../ChibiOS_versions/ChibiOS_2.6.6
-include $(CHIBIOS)/os/hal/hal.mk
 #include $(CHIBIOS)/os/hal/boards/SMARTSENSOR_V1_STM32_F103C8/board.mk
 
 include $(MY_STM32_PATH)/my_boards/SMARTSENSOR_V1_STM32_F103C8/board.mk
 
 #include $(CHIBIOS)/os/hal/ports/STM32/STM32F1xx/platform.mk
 include $(CHIBIOS)/os/hal/platforms/STM32F1xx/platform.mk
+include $(CHIBIOS)/os/hal/hal.mk
 #include $(CHIBIOS)/os/hal/hal.mk
 #include $(CHIBIOS)/os/hal/osal/rt/osal.mk
 #include $(CHIBIOS)/os/rt/rt.mk
 #include $(CHIBIOS)/os/rt/ports/ARMCMx/compilers/GCC/mk/port_stm32f1xx.mk
 include $(CHIBIOS)/os/ports/GCC/ARMCMx/STM32F1xx/port.mk
+
+include $(CHIBIOS)/os/kernel/kernel.mk
+
 #include $(CHIBIOS)/test/rt/test.mk
-include $(CHIBIOS)/test/test.mk
 include $(CHIBIOS)/test/test.mk
 
 # Define linker script file here
