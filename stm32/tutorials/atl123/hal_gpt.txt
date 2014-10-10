@@ -1,0 +1,60 @@
+
+Chibios/RT -- Using the HAL GPT
+
+The General Purpose Timer (GPT) module provides several timing functions to your program that can not be provided by other means. This module provides timers that can call a function after a specified time, continuously at a specified period, or can provides a busy-wait delay for short periods of time.
+
+There are three key parameters involved in making the GPT work.
+Timer clock.
+
+This clock will determine the resolution of the timer. The resolution will be the reciprocal of the Timer Clock. This timer must be an integer of the system clock. For example on the STM32F4, 203143 will not work because 168000000/203143 = 827.003638 which is not an integer. On the other hand 300,000 will work because 168,000,000 / 300,000 = 560, so the timer is running at 560Hz.
+Trigger Period
+
+This value determines the period between timer triggers. Is is measured in units of the Timer Clock. For example, if you have a Timer clock of 1,000,000Hz and a trigger period of 84840, then the timer will fire after 1uS * 84840 = 8.484mS.
+Callback function
+
+The Callback function is an optional function that will be called when the timer fires.
+Example configuration
+
+To configure the timer you will start by seting two parameters in the structure below. You will configure the Timer Clock and the Callback function if you are going to use it.
+
+/*
+ * GPT2 configuration.
+ */
+static GPTConfig gpt2cfg =
+{
+  200000,    /* timer clock.*/
+  gpt2cb        /* Timer callback.*/
+};
+
+If you are going to use the callback function, it will look something like this. The palSetPad() and palClearPad() functions are used in testing to determine how long your function takes to execute. You want to make sure that the function execution time is shorter then the timer period.
+
+/*
+ * GPT2  callback.
+ */
+static void gpt2cb(GPTDriver *gptp)
+{
+    palSetPad(GPIOD, GPIOD_LED3);
+
+    /* perform some function that needs to be done on a regular basis */
+
+    palClearPad(GPIOD, GPIOD_LED3);
+  }
+
+Once the Timer Clock and Callback are taken care of, the only things left are starting the timer and setting the period. Both of these functions are handled by calls that have very similar names. gptStart() configures the GPT, but does not start it. To start using the GPT you will call:
+
+gptStartContinuous() -- execute the callback function periodically at the specified rate.
+
+gptStartOneShot() -- execute the callback function once after the specified delay.
+
+gptPolledDelay() -- Enter a delay loop waiting for the specified delay. This should only be used for very short delays. It eats cpu time, but is handy when you need very short but accurate delays.
+
+    
+    // set up the timer
+    gptStart(&GPTD2, &gpt2cfg);
+
+    // configure the timer to fire after 25 timer clock tics
+    //   The clock is running at 200,000Hz, so each tick is 50uS,
+    //   so 200,000 / 25 = 8,000Hz
+    gptStartContinuous(&GPTD2, 25);
+
+

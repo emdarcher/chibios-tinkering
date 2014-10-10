@@ -1,0 +1,21 @@
+Chibios Program Template
+Chibios Program Template
+
+When starting a new project it is handy to have a program template that has many of the basics already written. Below I have a link to the program template that I use for most of my projects.  It is also the program that I will use on this website to present all but the more basic examples.  This way I do not have to provide a download for every program I present, just the module I am working with and a list of "usually minor" changes to config files and the main.c module.
+
+The template is ready to build and download to your STM32F4-Discovery to get a feel for your build enviroment.  Once you have that running, you will be ready to explore the Template and start building your application
+
+This template provides the following features:
+App broken down into multiple modules so you can remove fuctions you don't want
+USB-Serial connection
+I/O pins configured and ready to be used for diagnostics
+
+It also includes:
+
+A task for simply blinking an LED.
+A task for blinking an LED in Morse Code to display a fixed message
+A command line Shell that allows interaction with your program over the
+  USB-Serial connection.  The shell allows you to check process status, perform
+  a memory dump and change timing on the Green LED flasher.
+
+The template has a few other features available and also has a few built in flaws that we will fix in the articles on this website.

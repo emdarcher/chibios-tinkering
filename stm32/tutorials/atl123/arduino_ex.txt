@@ -1,0 +1,13 @@
+Arduino Chibios/RT Uno example with 10 tasks
+Setting up Chibios for Arduino
+
+Setting up the Arduino environment to use Chibios is very simple. Just follow these steps:
+
+    Download the library from http://rtoslibs.googlecode.com. As of Mar 2013, the file you want is http://rtoslibs.googlecode.com/files/ChibiOS20130208.zip This archive contains the libraries for both the AVR and ARM processors.
+    Extract the AVR or ARM library as needed, and copy it into the /LIB directory of your Arduino installation.
+
+
+
+This program does not approach the limit of processor time. It spends most of its time in time delays. This is even the case when the delay values are run down to very low values.
+
+The limiting factor in this example is RAM space. Each thread requires a certain amount of ram to store the thread state, and with only 2048 bytes of ram available thread overhead can exceed the RAM requirements of the application itself. 
