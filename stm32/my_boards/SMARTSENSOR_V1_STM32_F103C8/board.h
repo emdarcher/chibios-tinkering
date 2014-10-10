@@ -118,6 +118,7 @@ GPIOD_PD1_OSC_OUT,
  * Everything input with pull-up except:
  *  //PB1  - Push Pull output  (LED).
  *  PB3  - Pull-up input             (GPIOA_SWO).
+ * should maybe make PB7 and PB6 open-drain for I2C
  */
 #define VAL_GPIOBCRL            0x88888888      /*  PB7...PB0 */
 #define VAL_GPIOBCRH            0x88888888      /* PB15...PB8 */
