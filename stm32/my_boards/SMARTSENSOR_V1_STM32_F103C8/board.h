@@ -34,14 +34,14 @@
 #define STM32_LSECLK            32768
 
 #if defined(SMARTSENSOR_EXTERNAL_OSCILLATOR)
-#define STM32_HSECLK            8000000
+#define STM32_HSECLK            8000000UL
 #define STM32_HSE_BYPASS
 
 #elif defined(SMARTSENSOR_HSE_CRYSTAL)
-#define STM32_HSECLK            8000000
+#define STM32_HSECLK            8000000UL
 
 #else
-#define STM32_HSECLK            0
+#define STM32_HSECLK            8000000UL
 #endif
 
 
