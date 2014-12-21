@@ -9,12 +9,12 @@ The demo runs on a SmartSensor_v1 board.
 ** The Demo **
 
 The demo flashes and LED on PA3 within a thread.
+And flashes an LED on PA2 within the main thread.
+Also prints "hello" over Serial from UART1 at 9600 baud.
 
 ** Build Procedure **
 
-The demo has been tested by using the free Codesourcery GCC-based toolchain
-and YAGARTO.
-Just modify the TRGT line in the makefile in order to use different GCC ports.
+built using arm-none-eabi open source toolchain.
 
 ** Notes **
 
