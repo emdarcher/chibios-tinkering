@@ -63,9 +63,11 @@ int main(void){
     
      palSetPadMode(GPIOA, GPIOA_PA2, PAL_MODE_OUTPUT_PUSHPULL);
     palSetPadMode(GPIOA, 3, PAL_MODE_OUTPUT_PUSHPULL);
+//TestThread(&SD1);
 
     while (TRUE){
         palSetPad(GPIOA, 3);
+        //TestThread(&SD1);
         chThdSleepMilliseconds(500);
         palClearPad(GPIOA, 3);
         chThdSleepMilliseconds(500);
