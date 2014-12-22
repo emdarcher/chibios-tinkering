@@ -4,6 +4,9 @@
 
 #define MY_ABS(a) (((a)>=0) ? (a) : (0L-(a)))  
 
+#define DIG_TO_CHAR(d) ((char)((d) + 48)) 
+
+
 /* adc callback functions */
 static void adccb(ADCDriver *adcp, adcsample_t *buffer, size_t n);
 /* adc defines: */
@@ -72,24 +75,41 @@ T = (1864.1mV - mVout)/(11.71mV)
 T = (1864100uV - uVout)/(11710uV) 
 T (in 100ths of a degree) = ((int32_t
 */
-static int32_t uV_to_centi-degC(uint32_t in_uV){
+static int32_t uV_to_centiDegC(uint32_t in_uV){
     int32_t uVout = (int32_t)in_uV;
-    int32_t temp_calc = (int32_t)((1864100L - uVout)*100L)/11710L);
+    int32_t temp_calc = (int32_t)(((1864100L - uVout)*100L)/11710L);
     return temp_calc;
 }
 /* degF = degC * 9/5 + 32
 cF = ((cC * 9) + (3200*5))/5
 cF = ((cC * 9) + 16000)/5
 */
-static int32_t centi-degC_to_centi-degF(int32_t cdegC){
+static int32_t centiDegC_to_centiDegF(int32_t cdegC){
     return (int32_t)(((cdegC * 9L)+16000L)/5L);
 }
 
-static char * centi-deg_to_str(int32_t cdeg){
-    char out[6];
-    if(( MY_ABS(cdeg) > 9999 )){
-        out[1] = ' ';    
-    }
+static char * centiDeg_to_str(int32_t cdeg){
+    char out[7]="ABCD.EF";
+    uint8_t out_digs[5];
+    uint32_t val=(uint32_t)cdeg;
+    out[0] = (cdeg<0) ? '-' : '+';
+    if(( val > 9999 )){
+        out_digs[0] = val / 10000UL ;
+        val -= out_digs[0] * 10000UL;
+        out[1]= DIG_TO_CHAR(out_digs[0]);
+    }else{out[1]=' ';}
+    out_digs[1] = val / 1000UL;
+    val -= out_digs[1] * 1000UL;
+    out[2] = DIG_TO_CHAR(out_digs[1]);
+    out_digs[2] = val / 100UL;
+    val -= out_digs[2] * 100UL;
+    out[3] = DIG_TO_CHAR(out_digs[2]);
+    out_digs[3] = val / 10UL;
+    val -= out_digs[3] * 10UL;
+    out[5] = DIG_TO_CHAR(out_digs[3]);
+    out_digs[4] = val;
+    out[6] = DIG_TO_CHAR(out_digs[4]);
+    return (char *)out;
 }
 
 /* adc callback complete function */
@@ -107,7 +127,6 @@ static void adccb(ADCDriver *adcp, adcsample_t *buffer, size_t n){
     }
 }
 
-#define DIG_TO_CHAR(d) ((char)(d + 48)) 
 
 /* pwm callback funtions: */
 static void pwm2pcb(PWMDriver *pwmp){
@@ -186,8 +205,10 @@ static __attribute__((noreturn)) msg_t ADCreadout(void *arg){
         chSysLockFromIsr();
         adcStartConversionI(&ADCD1, &adcgrpcfg, samples, ADC_GRP1_BUF_DEPTH);
         chSysUnlockFromIsr();
+
         //convert to string the adc val
-        adcsample_t val= adc_avg_in0;  
+        //adcsample_t val= adc_avg_in0;
+        uint16_t val = adc12_to_mV(adc_avg_in0,MY_VDDA_UV);
         readout_digs[0] = val / 1000U;
         val -= readout_digs[0] * 1000U;
         readout_digs[1] = val / 100U;
