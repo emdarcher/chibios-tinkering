@@ -2,16 +2,19 @@
 #include "hal.h"
 //#include "test.h"
 
+
+
 /* adc callback functions */
 static void adccb(ADCDriver *adcp, adcsample_t *buffer, size_t n);
 /* adc defines: */
 /* Total number of channels to be sampled by a single ADC operation.*/
-#define ADC_GRP1_NUM_CHANNELS   1
-/* Depth of the conversion buffer, channels are sampled four times each.*/
-#define ADC_GRP1_BUF_DEPTH      4
+#define ADC_GRP1_NUM_CHANNELS   2
+/* Depth of the conversion buffer, channels are sampled this many times each.*/
+#define ADC_GRP1_BUF_DEPTH      8
 /* adc sample buffer */
 static adcsample_t samples[ADC_GRP1_NUM_CHANNELS * ADC_GRP1_BUF_DEPTH];
 static adcsample_t adc_avg_in0=0;
+static adcsample_t adc_avg_sensor=0;
 /* adc config stuff: */
 static const ADCConversionGroup adcgrpcfg = {
     FALSE, //linear buffer
@@ -19,14 +22,22 @@ static const ADCConversionGroup adcgrpcfg = {
     adccb, //callback
     NULL, //no error callback
     /* HW stuff / regs */
-    0, 0, //cr1 and cr2
-    0, //smpr1
-    ADC_SMPR2_SMP_AN0(ADC_SAMPLE_41P5), //smpr2 set analog 0 to 41.5 cycle sample
+    0, //cr1
+    ADC_CR2_TSVREFE, //cr2 enable temp sensor vref
+    ADC_SMPR1_SMP_SENSOR(ADC_SAMPLE_239P5),//smpr1 sensor sample 239.5 cycles
+    ADC_SMPR2_SMP_AN0(ADC_SAMPLE_41P5),//smpr2 set analog 0 to 41.5 cycles sample
     ADC_SQR1_NUM_CH(ADC_GRP1_NUM_CHANNELS), //sqr1 number of channels
     0, //sqr2
-    ADC_SQR3_SQ1_N(ADC_CHANNEL_IN0),//sqr3 channel in0 is 1st in sequence
+    //sqr3 channel in0 is 1st in sequence, sensor channel is 2nd in sequence
+    ADC_SQR3_SQ1_N(ADC_CHANNEL_IN0) | ADC_SQR3_SQ2_N(ADC_CHANNEL_SENSOR),
 };
-static  adcsample_t get_avg_adcgrp_ch(uint8_t channel, adcsample_t *in_samples, uint8_t num_channels, uint8_t buf_depth){
+/* gets the average of a channel from a sample array */
+static  adcsample_t get_avg_adcgrp_ch(
+        uint8_t channel, 
+        adcsample_t *in_samples, 
+        uint8_t num_channels, 
+        uint8_t buf_depth){
+    
     adcsample_t out_avg=0;
     uint16_t index=0;
     int i;
@@ -37,16 +48,41 @@ static  adcsample_t get_avg_adcgrp_ch(uint8_t channel, adcsample_t *in_samples, 
     out_avg /= buf_depth;
     return out_avg;
 }
+
+#define MY_VDDA_MV 3300U //Vdda in millivolts
+#define MY_VDDA_UV 3300000UL //Vdda in microvolts
+#define MY_UV_PER_ADC12 (MY_VDDA_UV >> 12) //amount of microvolts per adc12 tick
+#define MY_ADC12_TO_UV(a) (a * MY_UV_PER_ADC12) //gets microvolts from adc12 val
+
+/* function to get microvolts from an ADC reading */
+static uint32_t adc12_to_uV(adcsample_t adc12_in, uint32_t ref_uV){
+    return (adc12_in * (ref_uV >> 12));
+}
+/* function to get millivolts from an ADC reading */
+static uint16_t adc12_to_mV(adcsample_t adc12_in, uint32_t ref_uV){
+    return (uint16_t)(adc12_to_uV(adc12_in,ref_uV) / 1000U);
+}
+/* function to calculate temp in C using linear function
+found in the datasheet of STLM20 analog temp sensor */
+/* for range -10 to 65 degrees Celsius
+-11.71mV/C * T + 1.8641V = Vout
+Vout = 1.8641V - (0.01171V * T)
+T = (1.8641V - Vout)/(0.01171V)
+T = 
+
+*/
 /* adc callback complete function */
 static void adccb(ADCDriver *adcp, adcsample_t *buffer, size_t n){
     (void)buffer;(void)n;
     /* check for ADC_COMPLETE before continuing */
     if (adcp->state == ADC_COMPLETE) {
-        adcsample_t avg_in0;
+        adcsample_t avg_in0, avg_sensor;
 
         /* calculate avg of samples */
         avg_in0 = get_avg_adcgrp_ch( 0, samples, ADC_GRP1_NUM_CHANNELS, ADC_GRP1_BUF_DEPTH);
         adc_avg_in0 = avg_in0;
+        avg_sensor = get_avg_adcgrp_ch( 1, samples, ADC_GRP1_NUM_CHANNELS, ADC_GRP1_BUF_DEPTH);
+        adc_avg_sensor = avg_sensor;
     }
 }
 
@@ -81,10 +117,8 @@ static PWMConfig pwmcfg2 = {
 
 /* config for the serial stuff */
 static SerialConfig sd1conf = {
-9600,
-0,
-0,
-0,
+9600, /* baud */
+0,0,0, 
 };
 
 /*
