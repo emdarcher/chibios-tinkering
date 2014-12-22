@@ -11,13 +11,14 @@
 static void adccb(ADCDriver *adcp, adcsample_t *buffer, size_t n);
 /* adc defines: */
 /* Total number of channels to be sampled by a single ADC operation.*/
-#define ADC_GRP1_NUM_CHANNELS   2
+#define ADC_GRP1_NUM_CHANNELS   3
 /* Depth of the conversion buffer, channels are sampled this many times each.*/
 #define ADC_GRP1_BUF_DEPTH      8
 /* adc sample buffer */
 static adcsample_t samples[ADC_GRP1_NUM_CHANNELS * ADC_GRP1_BUF_DEPTH];
 static adcsample_t adc_avg_in0=0;
 static adcsample_t adc_avg_sensor=0;
+static adcsample_t adc_avg_STLM20=0;
 /* adc config stuff: */
 static const ADCConversionGroup adcgrpcfg = {
     FALSE, //linear buffer
@@ -28,11 +29,15 @@ static const ADCConversionGroup adcgrpcfg = {
     0, //cr1
     ADC_CR2_TSVREFE, //cr2 enable temp sensor vref
     ADC_SMPR1_SMP_SENSOR(ADC_SAMPLE_239P5),//smpr1 sensor sample 239.5 cycles
-    ADC_SMPR2_SMP_AN0(ADC_SAMPLE_41P5),//smpr2 set analog 0 to 41.5 cycles sample
+    //smpr2 set analog 0 to 41.5 cycles sample, STLM20 temp Vout PB1 analog 9 239.5 cycles
+    ADC_SMPR2_SMP_AN0(ADC_SAMPLE_41P5) |
+    ADC_SMPR2_SMP_AN9(ADC_SAMPLE_239P5),
     ADC_SQR1_NUM_CH(ADC_GRP1_NUM_CHANNELS), //sqr1 number of channels
     0, //sqr2
     //sqr3 channel in0 is 1st in sequence, sensor channel is 2nd in sequence
-    ADC_SQR3_SQ1_N(ADC_CHANNEL_IN0) | ADC_SQR3_SQ2_N(ADC_CHANNEL_SENSOR),
+    //channel in9 is 3rd in sequence,
+    ADC_SQR3_SQ1_N(ADC_CHANNEL_IN0) | ADC_SQR3_SQ2_N(ADC_CHANNEL_SENSOR) |
+    ADC_SQR3_SQ3_N(ADC_CHANNEL_IN9),
 };
 /* gets the average of a channel from a sample array */
 static  adcsample_t get_avg_adcgrp_ch(
@@ -89,8 +94,8 @@ static int32_t centiDegC_to_centiDegF(int32_t cdegC){
 }
 
 static char * centiDeg_to_str(int32_t cdeg){
-    char out[7]="ABCD.EF";
-    uint8_t out_digs[5];
+    static char out[7]="ABCD.EF";
+    static uint8_t out_digs[5];
     uint32_t val=(uint32_t)cdeg;
     out[0] = (cdeg<0) ? '-' : '+';
     if(( val > 9999 )){
@@ -117,13 +122,15 @@ static void adccb(ADCDriver *adcp, adcsample_t *buffer, size_t n){
     (void)buffer;(void)n;
     /* check for ADC_COMPLETE before continuing */
     if (adcp->state == ADC_COMPLETE) {
-        adcsample_t avg_in0, avg_sensor;
+        adcsample_t avg_in0, avg_sensor, avg_STLM20;
 
         /* calculate avg of samples */
         avg_in0 = get_avg_adcgrp_ch( 0, samples, ADC_GRP1_NUM_CHANNELS, ADC_GRP1_BUF_DEPTH);
         adc_avg_in0 = avg_in0;
         avg_sensor = get_avg_adcgrp_ch( 1, samples, ADC_GRP1_NUM_CHANNELS, ADC_GRP1_BUF_DEPTH);
         adc_avg_sensor = avg_sensor;
+        avg_STLM20 = get_avg_adcgrp_ch( 2, samples,  ADC_GRP1_NUM_CHANNELS, ADC_GRP1_BUF_DEPTH);
+        adc_avg_STLM20 = avg_STLM20;
     }
 }
 
@@ -220,7 +227,11 @@ static __attribute__((noreturn)) msg_t ADCreadout(void *arg){
         while(i--){
             readout_str[i] = DIG_TO_CHAR(readout_digs[i]);
         } 
+        char * cDegStr = centiDeg_to_str(uV_to_centiDegC(adc12_to_uV(adc_avg_STLM20,MY_VDDA_UV)));
         sdWrite(&SD1,(uint8_t *) readout_str, sizeof(readout_str));
+        sdPut(&SD1, ' ');
+        sdWrite(&SD1,(uint8_t *) cDegStr, 7);
+        sdWrite(&SD1,(uint8_t *)" DegC",5);
         sdWrite(&SD1,(uint8_t *) newline,2);
         chThdSleepMilliseconds(100);
     }
@@ -259,6 +270,7 @@ int main(void){
     chThdCreateStatic(waADCreadout, sizeof(waADCreadout), NORMALPRIO-1, ADCreadout, NULL);    
 
     palSetPadMode(GPIOA, GPIOA_PA0, PAL_MODE_INPUT_ANALOG);
+    palSetPadMode(GPIOB, GPIOB_PB1, PAL_MODE_INPUT_ANALOG);
     palSetPadMode(GPIOA, GPIOA_PA2, PAL_MODE_OUTPUT_PUSHPULL);
     palSetPadMode(GPIOA, 3, PAL_MODE_OUTPUT_PUSHPULL);
 //TestThread(&SD1);
