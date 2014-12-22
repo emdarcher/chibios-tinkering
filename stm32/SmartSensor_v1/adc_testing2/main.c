@@ -227,8 +227,8 @@ static WORKING_AREA(waADCreadout, 128);
 static __attribute__((noreturn)) msg_t ADCreadout(void *arg){
     (void)arg;
     chRegSetThreadName("ADCreadout serial");
-    static char readout_str[4]; //only goes up to 4096
-    static uint8_t readout_digs[4];
+    //static char readout_str[4]; //only goes up to 4096
+    //static uint8_t readout_digs[4];
     while(TRUE){
         
         chSysLockFromIsr();
@@ -238,7 +238,7 @@ static __attribute__((noreturn)) msg_t ADCreadout(void *arg){
         //convert to string the adc val
         //adcsample_t val= adc_avg_in0;
         uint16_t val = adc12_to_mV(adc_avg_in0,MY_VDDA_UV);
-        readout_digs[0] = val / 1000U;
+        /*readout_digs[0] = val / 1000U;
         val -= readout_digs[0] * 1000U;
         readout_digs[1] = val / 100U;
         val -= readout_digs[1] * 100U;
@@ -248,7 +248,8 @@ static __attribute__((noreturn)) msg_t ADCreadout(void *arg){
         uint8_t i=4;
         while(i--){
             readout_str[i] = DIG_TO_CHAR(readout_digs[i]);
-        } 
+        } */
+        char * readout_str = fourDig_to_str(val);
         int32_t cDegC = uV_to_centiDegC(adc12_to_uV(adc_avg_STLM20,MY_VDDA_UV));
         int32_t cDegF = centiDegC_to_centiDegF(cDegC);
         char * cDegCStr = centiDeg_to_str(cDegC);
