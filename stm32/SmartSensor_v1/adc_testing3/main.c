@@ -61,8 +61,8 @@ static  adcsample_t get_avg_adcgrp_ch(
 
 /* change the reference voltage definition here for the situation */
 //#define MY_VDDA_UV 3300000UL //Vdda in microvolts
-//#define MY_VDDA_UV 3000000UL //Vdda in microvolts
-#define MY_VDDA_UV 2950000UL //Vdda in microvolts
+#define MY_VDDA_UV 3000000UL //Vdda in microvolts
+//#define MY_VDDA_UV 2950000UL //Vdda in microvolts
 
 #define MY_UV_PER_ADC12 (MY_VDDA_UV >> 12) //amount of microvolts per adc12 tick
 #define MY_ADC12_TO_UV(a) ((a) * MY_UV_PER_ADC12) //gets microvolts from adc12 val
