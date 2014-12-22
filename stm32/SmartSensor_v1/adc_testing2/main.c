@@ -93,7 +93,7 @@ static int32_t uV_to_centiDegC(uint32_t in_uV){
 /* degF = degC * 9/5 + 32
 cF = ((cC * 9) + (3200*5))/5
 cF = ((cC * 9) + 16000)/5
-*/
+converts to degrees Fahrenheit*/
 static int32_t centiDegC_to_centiDegF(int32_t cdegC){
     return (int32_t)(((cdegC * 9L)+16000L)/5L);
 }
@@ -186,7 +186,7 @@ static PWMConfig pwmcfg2 = {
 
 /* config for the serial stuff */
 static SerialConfig sd1conf = {
-9600, /* baud */
+38400, /* baud */
 0,0,0, 
 };
 
