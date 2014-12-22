@@ -57,8 +57,13 @@ static  adcsample_t get_avg_adcgrp_ch(
     return out_avg;
 }
 
-#define MY_VDDA_MV 3300U //Vdda in millivolts
-#define MY_VDDA_UV 3300000UL //Vdda in microvolts
+//#define MY_VDDA_MV 3300U //Vdda in millivolts
+
+/* change the reference voltage definition here for the situation */
+//#define MY_VDDA_UV 3300000UL //Vdda in microvolts
+//#define MY_VDDA_UV 3000000UL //Vdda in microvolts
+#define MY_VDDA_UV 2950000UL //Vdda in microvolts
+
 #define MY_UV_PER_ADC12 (MY_VDDA_UV >> 12) //amount of microvolts per adc12 tick
 #define MY_ADC12_TO_UV(a) (a * MY_UV_PER_ADC12) //gets microvolts from adc12 val
 
@@ -115,6 +120,23 @@ static char * centiDeg_to_str(int32_t cdeg){
     out_digs[4] = val;
     out[6] = DIG_TO_CHAR(out_digs[4]);
     return (char *)out;
+}
+static char * fourDig_to_str(uint16_t fourDig){
+    static char out_str[4]="    ";
+    static uint8_t digs[4];
+    uint16_t val = fourDig;
+    digs[0] = val / 1000U;
+    val -= digs[0] * 1000U;
+    digs[1] = val / 100U;
+    val -= digs[1] * 100U;
+    digs[2] = val / 10U;
+    val -= digs[2] * 10U;
+    digs[3] = val;
+    uint8_t i=4;
+    while(i--){
+        out_str[i] = DIG_TO_CHAR(digs[i]);
+    } 
+    return (char *)out_str;
 }
 
 /* adc callback complete function */
@@ -228,8 +250,12 @@ static __attribute__((noreturn)) msg_t ADCreadout(void *arg){
             readout_str[i] = DIG_TO_CHAR(readout_digs[i]);
         } 
         char * cDegStr = centiDeg_to_str(uV_to_centiDegC(adc12_to_uV(adc_avg_STLM20,MY_VDDA_UV)));
+        sdWrite(&SD1,(uint8_t *)"PA0 input: ",11);
         sdWrite(&SD1,(uint8_t *) readout_str, sizeof(readout_str));
-        sdPut(&SD1, ' ');
+        sdWrite(&SD1,(uint8_t *)"mV ",3);
+        sdWrite(&SD1,(uint8_t *)"STLM20 Vout: ",13);
+        sdWrite(&SD1,(uint8_t *)fourDig_to_str(adc12_to_mV(adc_avg_STLM20,MY_VDDA_UV)),4);
+        sdWrite(&SD1,(uint8_t *)"mV ",3);
         sdWrite(&SD1,(uint8_t *) cDegStr, 7);
         sdWrite(&SD1,(uint8_t *)" DegC",5);
         sdWrite(&SD1,(uint8_t *) newline,2);
@@ -264,10 +290,10 @@ int main(void){
 
     /* start PWM on TIM2 with our config */
 
-    chThdCreateStatic(waThread1, sizeof(waThread1), NORMALPRIO+1, Thread1, NULL);
+    chThdCreateStatic(waThread1, sizeof(waThread1), NORMALPRIO, Thread1, NULL);
     //chThdCreateStatic(waThread2, sizeof(waThread2), NORMALPRIO+2, Thread2, NULL);
-    chThdCreateStatic(waPWMThread2, sizeof(waPWMThread2), NORMALPRIO, PWMThread2, NULL);    
-    chThdCreateStatic(waADCreadout, sizeof(waADCreadout), NORMALPRIO-1, ADCreadout, NULL);    
+    chThdCreateStatic(waPWMThread2, sizeof(waPWMThread2), NORMALPRIO+1, PWMThread2, NULL);    
+    chThdCreateStatic(waADCreadout, sizeof(waADCreadout), NORMALPRIO+2, ADCreadout, NULL);    
 
     palSetPadMode(GPIOA, GPIOA_PA0, PAL_MODE_INPUT_ANALOG);
     palSetPadMode(GPIOB, GPIOB_PB1, PAL_MODE_INPUT_ANALOG);
