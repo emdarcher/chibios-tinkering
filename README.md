@@ -1,6 +1,6 @@
 Repository for code from tinkering around with [ChibiOS/RT](http://www.chibios.org/dokuwiki/doku.php).
 
-Probably most code will be for STM32F1 series, and maybe STM32L1.
+Most of the code is targeting the STM32F1 series of microcontrollers, primarily the STM32F103C8T6 on the SmartSensor_v1 board. May later do some code for STM32L1 series MCUs.
 
 Will test drivers and code for other projects here as well.
 
