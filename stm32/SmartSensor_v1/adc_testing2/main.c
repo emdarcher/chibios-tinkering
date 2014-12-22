@@ -2,7 +2,7 @@
 #include "hal.h"
 //#include "test.h"
 
-
+#define MY_ABS(a) (((a)>=0) ? (a) : (0L-(a)))  
 
 /* adc callback functions */
 static void adccb(ADCDriver *adcp, adcsample_t *buffer, size_t n);
@@ -68,9 +68,30 @@ found in the datasheet of STLM20 analog temp sensor */
 -11.71mV/C * T + 1.8641V = Vout
 Vout = 1.8641V - (0.01171V * T)
 T = (1.8641V - Vout)/(0.01171V)
-T = 
-
+T = (1864.1mV - mVout)/(11.71mV)
+T = (1864100uV - uVout)/(11710uV) 
+T (in 100ths of a degree) = ((int32_t
 */
+static int32_t uV_to_centi-degC(uint32_t in_uV){
+    int32_t uVout = (int32_t)in_uV;
+    int32_t temp_calc = (int32_t)((1864100L - uVout)*100L)/11710L);
+    return temp_calc;
+}
+/* degF = degC * 9/5 + 32
+cF = ((cC * 9) + (3200*5))/5
+cF = ((cC * 9) + 16000)/5
+*/
+static int32_t centi-degC_to_centi-degF(int32_t cdegC){
+    return (int32_t)(((cdegC * 9L)+16000L)/5L);
+}
+
+static char * centi-deg_to_str(int32_t cdeg){
+    char out[6];
+    if(( MY_ABS(cdeg) > 9999 )){
+        out[1] = ' ';    
+    }
+}
+
 /* adc callback complete function */
 static void adccb(ADCDriver *adcp, adcsample_t *buffer, size_t n){
     (void)buffer;(void)n;
