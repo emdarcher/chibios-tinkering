@@ -249,15 +249,20 @@ static __attribute__((noreturn)) msg_t ADCreadout(void *arg){
         while(i--){
             readout_str[i] = DIG_TO_CHAR(readout_digs[i]);
         } 
-        char * cDegStr = centiDeg_to_str(uV_to_centiDegC(adc12_to_uV(adc_avg_STLM20,MY_VDDA_UV)));
+        int32_t cDegC = uV_to_centiDegC(adc12_to_uV(adc_avg_STLM20,MY_VDDA_UV));
+        int32_t cDegF = centiDegC_to_centiDegF(cDegC);
+        char * cDegCStr = centiDeg_to_str(cDegC);
         sdWrite(&SD1,(uint8_t *)"PA0 input: ",11);
         sdWrite(&SD1,(uint8_t *) readout_str, sizeof(readout_str));
         sdWrite(&SD1,(uint8_t *)"mV ",3);
         sdWrite(&SD1,(uint8_t *)"STLM20 Vout: ",13);
         sdWrite(&SD1,(uint8_t *)fourDig_to_str(adc12_to_mV(adc_avg_STLM20,MY_VDDA_UV)),4);
         sdWrite(&SD1,(uint8_t *)"mV ",3);
-        sdWrite(&SD1,(uint8_t *) cDegStr, 7);
-        sdWrite(&SD1,(uint8_t *)" DegC",5);
+        sdWrite(&SD1,(uint8_t *) cDegCStr, 7);
+        sdWrite(&SD1,(uint8_t *)" DegC = ",8);
+        char * cDegFStr = centiDeg_to_str(cDegF);
+        sdWrite(&SD1,(uint8_t *) cDegFStr, 7);
+        sdWrite(&SD1,(uint8_t *)" DegF ",6);
         sdWrite(&SD1,(uint8_t *) newline,2);
         chThdSleepMilliseconds(100);
     }
