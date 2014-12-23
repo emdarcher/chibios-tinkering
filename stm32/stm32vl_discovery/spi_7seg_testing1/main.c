@@ -7,19 +7,32 @@
 
 #define DIG_TO_CHAR(d) ((char)((d) + 48)) 
 
-#define DIG_SWITCH_DELAY_MS 10
+#define DIG_SWITCH_DELAY_MS 4
+#define DIG_SWITCH_DELAY_US 250
 
-void init_SPI1(void);
+static inline void init_SPI1(void);
 //void init_digit_pins(void);
 void write_SPI1(uint8_t out_byte);
 void msg_error(void);
 
 void write_number(int16_t number);
 void write_digit(int8_t num, uint8_t dig);
-
+volatile  bool_t SPI_done = FALSE;
 
 static inline void init_digit_pins(void){
-    palSetGroupMode(GPIOC, ALL_DIGS, 0,PAL_MODE_OUTPUT_PUSHPULL );
+//    palSetGroupMode(GPIOC, ALL_DIGS, 0,PAL_MODE_OUTPUT_PUSHPULL );
+    palSetPadMode(GPIOC, 0, PAL_MODE_OUTPUT_PUSHPULL);
+    palSetPadMode(GPIOC, 1, PAL_MODE_OUTPUT_PUSHPULL);
+    palSetPadMode(GPIOC, 2, PAL_MODE_OUTPUT_PUSHPULL);
+    palSetPadMode(GPIOC, 3, PAL_MODE_OUTPUT_PUSHPULL);
+}
+
+static inline void init_SPI1(void){
+    //palSetPadMode(GPIOA, 4, PAL_MODE_STM32_ALTERNATE_PUSHPULL);
+    palSetPadMode(GPIOA, 5, PAL_MODE_STM32_ALTERNATE_PUSHPULL);
+    palSetPadMode(GPIOA, 7, PAL_MODE_STM32_ALTERNATE_PUSHPULL);
+
+    palSetPadMode(GPIOA,3,PAL_MODE_OUTPUT_PUSHPULL);
 }
 
 /* spi callback proto */
@@ -27,7 +40,7 @@ static void spicb(SPIDriver *spip);
 
 /*
  * SPI configuration structure.
- * Maximum speed (12MHz), CPHA=0, CPOL=0, 8bits frames, MSb transmitted first.
+ * speed clk/div64, CPHA=0, CPOL=0, 8bits frames, MSb transmitted first.
  * The slave select line is the pin GPIOA_SPI1NSS on the port GPIOA.
  */
 static const SPIConfig spicfg = {
@@ -35,7 +48,7 @@ static const SPIConfig spicfg = {
   /* HW dependent part.*/
   GPIOA,
   GPIOA_SPI1NSS,
-  0,//cr1
+  SPI_CR1_BR_0 | SPI_CR1_BR_2 | SPI_CR1_MSTR,//cr1 set baud to clk/div64
 };
 
 /*
@@ -43,24 +56,28 @@ static const SPIConfig spicfg = {
  */
 static void spicb(SPIDriver *spip) {
  
-  /* On transfer end just releases the slave select line.*/
-  chSysLockFromIsr();
-  spiUnselectI(spip);
-  chSysUnlockFromIsr();
+    if(spip->state == SPI_COMPLETE){
+    /* On transfer end just releases the slave select line.*/
+    chSysLockFromIsr();
+    SPI_done = TRUE;
+    spiUnselectI(spip);
+//    palSetPad(GPIOC,4);
+    chSysUnlockFromIsr();
+    }
 }
 
 void write_digit(int8_t num, uint8_t dig){
      
-    uint8_t out_bytes[1] = {
+    uint8_t out_bytes[1]; /*= {
         (((num<10)&&(num>=0)) ? number_seg_bytes[num] : number_seg_bytes[10]),
-    };
-
+    };*/
+    out_bytes[0] =(((num<10)&&(num>=0)) ? number_seg_bytes[num] : number_seg_bytes[10]); 
     chSysLockFromIsr();
+    palClearPad(GPIOA,3);
     /* SPI slave selection and transmission start.*/
     spiSelectI(&SPID1);
-    spiStartSendI(&SPID1, 1, out_bytes);
-
-    chSysUnlockFromIsr();
+    //spiStartSendI(&SPID1, 1, out_bytes);
+    spiPolledExchange(&SPID1, out_bytes[0]);
     uint8_t nd = NUM_DIGS;
     while(nd--){
         if(nd == dig){
@@ -69,9 +86,35 @@ void write_digit(int8_t num, uint8_t dig){
             palClearPad(GPIOC,nd);
         }
     }
-
-    chThdSleepMilliseconds(DIG_SWITCH_DELAY_MS); 
+    spiUnselectI(&SPID1);
+    palSetPad(GPIOA, 3);
+    chSysUnlockFromIsr();
+    //while(SPI_done == FALSE);
+    chThdSleepMicroseconds(DIG_SWITCH_DELAY_US);
+    //chThdSleepMilliseconds(DIG_SWITCH_DELAY_MS); 
 }
+
+void msg_error(void){
+    write_digit(10, 0);
+}
+
+void write_number(int16_t number){
+        uint8_t h;
+        int16_t format_num = number;
+        //check if number is too big ot not
+        if ((number < 10000) && (number >= 0)){
+            //formats number based on digits to correct digits on display
+            //for(h=0;h < num_digits;h++){
+            h = NUM_DIGS;
+            while(h--){
+                write_digit(format_num % 10, h);
+                format_num /= 10;
+            }
+        } else {
+            msg_error();
+        }
+}
+
 
 
 static WORKING_AREA(waSegThread1,32);
@@ -79,10 +122,11 @@ static __attribute__((noreturn)) msg_t SegThread1(void *arg){
     (void)arg;
     chRegSetThreadName("seg thread");
     while(TRUE){
-        write_digit(1,0);
-        write_digit(2,1);
-        write_digit(3,2);
-        write_digit(4,3);
+        //write_digit(1,0);
+        //write_digit(2,1);
+        //write_digit(3,2);
+        //write_digit(4,3);
+        write_number(1234);
     }
 }
 
@@ -135,9 +179,12 @@ int main(void){
     
 
     chThdCreateStatic(waThread1, sizeof(waThread1), NORMALPRIO, Thread1, NULL);
-    chThdCreateStatic(waSegThread1, sizeof(waSegThread1), NORMALPRIO, SegThread1, NULL);
+    chThdCreateStatic(waSegThread1, sizeof(waSegThread1), NORMALPRIO+2, SegThread1, NULL);
     //chThdCreateStatic(waThread2, sizeof(waThread2), NORMALPRIO+2, Thread2, NULL);
     //chThdCreateStatic(waPWMThread2, sizeof(waPWMThread2), NORMALPRIO+1, PWMThread2, NULL);    
+    
+    init_digit_pins();
+    init_SPI1();
 
     palSetPadMode(GPIOC, 8, PAL_MODE_OUTPUT_PUSHPULL);
     palSetPadMode(GPIOC, 9, PAL_MODE_OUTPUT_PUSHPULL);
