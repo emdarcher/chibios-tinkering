@@ -21,4 +21,6 @@ stlink-flash:
 	@printf "  FLASH  $<\n"
 	$(Q)$(STFLASH) write $(*).bin 0x8000000
 
+my_size:
+	$(SZ) $(BUILDDIR)/$(PROJECT).elf 
 
