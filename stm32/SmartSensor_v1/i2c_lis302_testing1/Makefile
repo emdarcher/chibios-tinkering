@@ -111,6 +111,9 @@ LDSCRIPT = $(MY_STM32_PATH)/ld/STM32F103x8.ld
 # setting.
 #add #$(OSALSRC) \# for newer versions 3x
 
+LOCAL_SRC = lis3.c \
+	i2c_pns.c
+
 
 CSRC = $(PORTSRC) \
        $(KERNSRC) \
@@ -120,7 +123,9 @@ CSRC = $(PORTSRC) \
        $(BOARDSRC) \
        $(CHIBIOS)/os/various/evtimer.c \
        $(CHIBIOS)/os/various/syscalls.c \
-       main.c
+        $(CHIBIOS)/os/various/chprintf.c \
+	$(LOCAL_SRC) \
+       main.c 
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
