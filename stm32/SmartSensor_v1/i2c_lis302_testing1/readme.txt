@@ -10,7 +10,7 @@ The demo runs on a SmartSensor_v1 board.
 
 The demo flashes and LED on PA3 within a thread.
 And flashes an LED on PA2 within the main thread.
-Prints out voltage on PA0 in millivolts, the voltage output from a STLM20 temp sensor, and the calculated temperature reading from the STLM20 temp sensor in Celsius and Fahrenheit at 38400 baud on Serial 1.
+This program prints the lis302 acceleromter x,y,z values over Serial 1.
 
 ** Build Procedure **
 
