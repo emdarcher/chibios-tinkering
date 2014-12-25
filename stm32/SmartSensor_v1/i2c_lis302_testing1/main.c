@@ -77,11 +77,11 @@ static __attribute__((noreturn)) msg_t SerOutThr1(void *arg){
     (void)arg;
     while(TRUE){
         chThdSleepMilliseconds(100);
-//        chSysLockFromIsr();
+        chSysLockFromIsr();
         accel_x = acceleration_x;
         accel_y = acceleration_y;
         accel_z = acceleration_z;
- //       chSysUnlockFromIsr();
+        chSysUnlockFromIsr();
         chprintf((BaseSequentialStream *)&SD1, 
             "accel_x:\t%d\taccel_y:\t%d\taccel_z:\t%d\n\r", 
             accel_x,accel_y,accel_z); 
