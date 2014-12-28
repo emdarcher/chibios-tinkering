@@ -10,28 +10,6 @@
 
 #define MY_ABS(a) (((a)>=0) ? (a) : (0L-(a)))  
 
-#define DIG_TO_CHAR(d) ((char)((d) + 48)) 
-
-static const char newline[2] = "\n\r";
-
-static char * fourDig_to_str(uint16_t fourDig){
-    static char out_str[4]="    ";
-    static uint8_t digs[4];
-    uint16_t val = fourDig;
-    digs[0] = val / 1000U;
-    val -= digs[0] * 1000U;
-    digs[1] = val / 100U;
-    val -= digs[1] * 100U;
-    digs[2] = val / 10U;
-    val -= digs[2] * 10U;
-    digs[3] = val;
-    uint8_t i=4;
-    while(i--){
-        out_str[i] = DIG_TO_CHAR(digs[i]);
-    } 
-    return (char *)out_str;
-}
-
 /* config for the serial stuff */
 static SerialConfig sd1conf = {
 38400, /* baud */
@@ -94,10 +72,11 @@ static __attribute__((noreturn)) msg_t SerOutThr1(void *arg){
         accel_y = acceleration_y;
         accel_z = acceleration_z;
         chSysUnlockFromIsr();
+        get_lx_from_cnts();
         chprintf((BaseSequentialStream *)&SD1, 
-            "accel: x:\t%d\ty:\t%d\tz:\t%d\tcolor: y=%d  \tr=%d  \tg=%d  \tb=%d  \n\r", 
+            "accel: x:\t%d\ty:\t%d\tz:\t%d\tcolor_lx: y=%U\tr=%U\tg=%U\tb=%U\n\r", 
             accel_x,accel_y,accel_z,
-            y_cnt_val,r_cnt_val,g_cnt_val,b_cnt_val); 
+            y_lx_val,r_lx_val,g_lx_val,b_lx_val); 
     }
 }
 
