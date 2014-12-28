@@ -112,7 +112,8 @@ LDSCRIPT = $(MY_STM32_PATH)/ld/STM32F103x8.ld
 #add #$(OSALSRC) \# for newer versions 3x
 
 LOCAL_SRC = lis3.c \
-	i2c_pns.c
+	i2c_pns.c \
+	vm6101.c
 
 
 CSRC = $(PORTSRC) \

@@ -6,7 +6,7 @@
 #include "chprintf.h"
 #include "i2c_pns.h"
 #include "lis3.h"
-
+#include "vm6101.h"
 
 #define MY_ABS(a) (((a)>=0) ? (a) : (0L-(a)))  
 
@@ -64,8 +64,19 @@ static msg_t PollAccelThread(void *arg) {
   (void)arg;
   while (TRUE) {
     /*chThdSleepMilliseconds(rand() & 31);*/
-    chThdSleepMilliseconds(32);
+    chThdSleepMilliseconds(20);
     request_acceleration_data();
+  }
+  return 0;
+}
+static WORKING_AREA(PollColorThreadWA, 256);
+static msg_t PollColorThread(void *arg) {
+  chRegSetThreadName("PollColor");
+  (void)arg;
+  while (TRUE) {
+    /*chThdSleepMilliseconds(rand() & 31);*/
+    chThdSleepMilliseconds(20);
+    request_color_data();
   }
   return 0;
 }
@@ -74,6 +85,7 @@ static WORKING_AREA(waSerOutThr1,128);
 static __attribute__((noreturn)) msg_t SerOutThr1(void *arg){
     chRegSetThreadName("serial_out");
     int8_t accel_x,accel_y,accel_z;
+    
     (void)arg;
     while(TRUE){
         chThdSleepMilliseconds(100);
@@ -83,8 +95,9 @@ static __attribute__((noreturn)) msg_t SerOutThr1(void *arg){
         accel_z = acceleration_z;
         chSysUnlockFromIsr();
         chprintf((BaseSequentialStream *)&SD1, 
-            "accel_x:\t%d\taccel_y:\t%d\taccel_z:\t%d\n\r", 
-            accel_x,accel_y,accel_z); 
+            "accel: x:\t%d\ty:\t%d\tz:\t%d\tcolor: y=%d  \tr=%d  \tg=%d  \tb=%d  \n\r", 
+            accel_x,accel_y,accel_z,
+            y_cnt_val,r_cnt_val,g_cnt_val,b_cnt_val); 
     }
 }
 
@@ -104,6 +117,11 @@ int main(void){
         sizeof(PollAccelThreadWA),
         NORMALPRIO,
         PollAccelThread,
+        NULL);
+    chThdCreateStatic(PollColorThreadWA,
+        sizeof(PollColorThreadWA),
+        NORMALPRIO,
+        PollColorThread,
         NULL);
 
 
