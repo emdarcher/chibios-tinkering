@@ -84,12 +84,9 @@ void request_acceleration_data(void){
   if (status != RDY_OK){
     errors = i2cGetErrors(&I2CD1);
   }
-
-  //acceleration_x = accel_rx_data[0] + (accel_rx_data[1] << 8);
-  acceleration_x = accel_rx_data[1];// + (accel_rx_data[1] << 8);
-  //acceleration_y = accel_rx_data[2] + (accel_rx_data[3] << 8);
-  acceleration_y = accel_rx_data[3]; //+ (accel_rx_data[3] << 8);
-  //acceleration_z = accel_rx_data[4] + (accel_rx_data[5] << 8);
-  acceleration_z = accel_rx_data[5]; //+ (accel_rx_data[5] << 8);
+  /* get the vals */
+  acceleration_x = accel_rx_data[1];
+  acceleration_y = accel_rx_data[3];
+  acceleration_z = accel_rx_data[5];
 }
 
