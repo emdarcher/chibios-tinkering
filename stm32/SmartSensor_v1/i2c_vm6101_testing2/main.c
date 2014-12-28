@@ -59,26 +59,26 @@ static __attribute__((noreturn))  msg_t Thread1(void *arg) {
  * Accelerometer thread
  */
 static WORKING_AREA(PollAccelThreadWA, 256);
-static msg_t PollAccelThread(void *arg) {
+static __attribute__((noreturn)) msg_t PollAccelThread(void *arg) {
   chRegSetThreadName("PollAccel");
   (void)arg;
   while (TRUE) {
-    /*chThdSleepMilliseconds(rand() & 31);*/
     chThdSleepMilliseconds(20);
     request_acceleration_data();
   }
-  return 0;
 }
+
+/*
+ * VM6101 Color Sensor reading thread 
+ */
 static WORKING_AREA(PollColorThreadWA, 256);
-static msg_t PollColorThread(void *arg) {
+static __attribute__((noreturn)) msg_t PollColorThread(void *arg) {
   chRegSetThreadName("PollColor");
   (void)arg;
   while (TRUE) {
-    /*chThdSleepMilliseconds(rand() & 31);*/
     chThdSleepMilliseconds(20);
     request_color_data();
   }
-  return 0;
 }
 
 static WORKING_AREA(waSerOutThr1,128);
