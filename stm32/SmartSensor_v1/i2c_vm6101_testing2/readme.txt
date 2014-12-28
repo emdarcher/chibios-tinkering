@@ -11,7 +11,7 @@ The demo runs on a SmartSensor_v1 board.
 The demo flashes and LED on PA3 within a thread.
 And flashes an LED on PA2 within the main thread.
 This program prints the lis302 acceleromter x,y,z values
-and the the raw 24-bit YRGB color count values from the vm6101
+and the the YRGB approximate color lx values from the vm6101
 color light sensor, over Serial 1.
 
 ** Build Procedure **
