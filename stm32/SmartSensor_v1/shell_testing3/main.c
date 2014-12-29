@@ -274,8 +274,8 @@ if(argc > 0){
             chprintf(chp, loop_usage);
         }
     }
-    chprintf(chp, "looping %U times with delay of %U milliseconds:\n\r", 
-        loop_times,loop_delay_ms);
+    chprintf(chp, "looping %s command %U times with delay of %U milliseconds:\n\r", 
+        argv[0],loop_times,loop_delay_ms);
 
     while(loop_times--){
         call_cmd_from_index(chp,pass_argc,pass_argv,cmd_i);        
