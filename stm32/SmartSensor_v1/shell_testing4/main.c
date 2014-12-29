@@ -236,6 +236,7 @@ static void cmd_loop(BaseSequentialStream *chp, int argc, char *argv[]) {
     uint32_t loop_times=1;
     uint32_t loop_delay_ms=100;
     uint8_t cmd_match=0;
+    uint8_t is_infinite=0;
     int pass_argc=0;
     char *pass_argv[0];
 if(argc > 0){
@@ -250,8 +251,10 @@ if(argc > 0){
     if(argc > 1){
         if(strcmp("-l", argv[1])==0){
             if(argc > 2){
-                if(str_is_valid_num(argv[2])){ 
-                    loop_times = atol(argv[2]);
+                uint8_t is_valid_num = str_is_valid_num(argv[2]);
+                is_infinite = (strcmp("-i",argv[2])==0);
+                if(is_valid_num || is_infinite){ 
+                    if(is_valid_num){loop_times = atol(argv[2]);}
                     if(argc > 3){
                         if(strcmp("-s", argv[3])==0){
                             if(argc > 4){
@@ -287,13 +290,10 @@ if(argc > 0){
     while(loop_times--){
         call_cmd_from_index(chp,pass_argc,pass_argv,cmd_i);        
         chThdSleepMilliseconds(loop_delay_ms);
-        //if(sdGetTimeout((SerialDriver *)chp, TIME_IMMEDIATE) == 'q'){break;}
-        #if 1
-        //if(chSequentialStreamRead(chp, (uint8_t *)&c, 1)!=0){  
         if(sdReadTimeout((SerialDriver *)chp,(uint8_t *)&c,1,TIME_IMMEDIATE)!=0){
-          if((c==3)||(c=='q')){break;}
+          if((c==3)||(c=='q')){break;} //checks if 'q' or CTRL+C (ascii dec 3) have been input
         }
-        #endif
+        if(is_infinite){loop_times++;}
     } 
 
     } else if(strcmp("-h",argv[0])==0){
