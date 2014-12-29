@@ -113,7 +113,7 @@ LDSCRIPT = $(MY_STM32_PATH)/ld/STM32F103x8.ld
 
 LOCAL_SRC = m25.c 
 
-#LOCAL_SRC += lis3.c \
+LOCAL_SRC += lis3.c \
 	i2c_pns.c \
 	vm6101.c
 
@@ -128,6 +128,7 @@ CSRC = $(PORTSRC) \
        $(CHIBIOS)/os/various/syscalls.c \
         $(CHIBIOS)/os/various/chprintf.c \
 	$(CHIBIOS)/os/various/shell.c \
+    ${CHIBIOS}/os/various/memstreams.c \
 	$(LOCAL_SRC) \
        main.c 
 
