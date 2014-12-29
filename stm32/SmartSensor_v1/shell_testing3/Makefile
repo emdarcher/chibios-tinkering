@@ -3,6 +3,9 @@
 # NOTE: Can be overridden externally.
 #
 
+#definitions for libs 
+
+
 # Compiler options here.
 ifeq ($(USE_OPT),)
   USE_OPT = -O2 -ggdb -fomit-frame-pointer -falign-functions=16
@@ -211,7 +214,7 @@ CPPWARN = -Wall -Wextra
 #
 
 # List all user C define here, like -D_DEBUG=1
-UDEFS =
+UDEFS = -DSHELL_MAX_ARGUMENTS=6
 
 # Define ASM defines here
 UADEFS =
