@@ -8,11 +8,11 @@ The demo runs on a SmartSensor_v1 board.
 
 ** The Demo **
 
-The demo flashes and LED on PA3 within a thread.
-And flashes an LED on PA2 within the main thread.
-This program prints the lis302 acceleromter x,y,z values
-and the the YRGB approximate color lx values from the vm6101
-color light sensor, over Serial 1.
+The demo flashes and LED on PA2 within a thread.
+This also uses the Command Shell on Serial 1,
+type "help" in the shell prompt to see available commands,
+most commands will give you help on how to use them if you
+type the command line argument "-h" after the command.
 
 ** Build Procedure **
 
