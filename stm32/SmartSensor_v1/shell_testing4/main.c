@@ -121,9 +121,11 @@ static const char color_usage[] = "usage: color [ -h | -l <loop_times>]\n\r"
                     "\t-h: prints help\n\r"
                     "\t-l <loop_times> : loops the amount of times\n\r";
 
-static const char loop_usage[] = "loop usage: loop <command> [ -h | -l <loop_times>]\n\r"
+static const char loop_usage[] = "loop usage: loop <command> [ -h | -l [<loop_times> | -i ]]\n\r"
                     "\t-h: prints help\n\r"
-                    "\t-l <loop_times> : loops the amount of times\n\r";
+                    "\t-l <loop_times> : loops the amount of times\n\r"
+                    "\t-l -i : loops infinitely\n\r"
+                    "looping can be halted by pressing CTRL+C or 'q' \n\r";
 static uint8_t str_is_valid_num(char * str){
     uint8_t nI;
     for(nI=0;nI<strlen(str);nI++){
@@ -284,7 +286,8 @@ if(argc > 0){
             chprintf(chp, loop_usage);
         }
     }
-    chprintf(chp, "looping %s command %U times with delay of %U milliseconds:\n\r", 
+    chprintf(chp, "looping %s command %U times with delay of %U milliseconds:\n\r"
+                    "looping can be halted by pressing CTRL+C or 'q' during operation\n\r", 
         argv[0],loop_times,loop_delay_ms);
     char c;
     while(loop_times--){
