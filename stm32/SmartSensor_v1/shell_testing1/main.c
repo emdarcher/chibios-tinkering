@@ -20,7 +20,7 @@
 
 #define MY_ABS(a) (((a)>=0) ? (a) : (0L-(a)))  
 
-#define SHELL_WA_SIZE THD_WA_SIZE(2048)
+#define SHELL_WA_SIZE THD_WA_SIZE(1024)
 
 
 /* config for the serial stuff */
@@ -131,12 +131,15 @@ static void cmd_led(BaseSequentialStream *chp, int argc, char *argv[]) {
         } else if(argv[0][0] == '0'){
             palClearPad(GPIOA,3);
             chprintf(chp, "led OFF\n\r");
-        } else {
+        } else if(argv[0][0] == 't'){
+            palTogglePad(GPIOA,3);
+            chprintf(chp, "led TOGGLE\n\r");
+        }else {
             chprintf(chp, "%c is not a valid value for led!\n\r",argv[1][0]);
         }
     } else {
         if(argc >= 2){chprintf(chp, "too many arguments!\n\r");}
-        chprintf(chp, "usage: led <led_state>\n\r\tled_state: 0=OFF 1=ON\n\r");
+        chprintf(chp, "usage: led <led_state>\n\r\tled_state: 0=OFF 1=ON t=TOGGLE\n\r");
     }
 }
 
