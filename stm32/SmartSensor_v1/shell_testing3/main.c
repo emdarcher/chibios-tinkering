@@ -206,7 +206,8 @@ static void cmd_color(BaseSequentialStream *chp, int argc, char *argv[]) {
 }
 
 static void cmd_led(BaseSequentialStream *chp, int argc, char *argv[]) {
-    
+    const char led_usage[] = "usage: led <led_state>\n\r\tled_state: 0=OFF 1=ON t=TOGGLE\n\r";
+    const char led_toggle_text[] = "led TOGGLE\n\r";
     if((argc > 0) && (argc < 2)){
         if(argv[0][0] == '1'){
             palSetPad(GPIOA,3);
@@ -216,13 +217,19 @@ static void cmd_led(BaseSequentialStream *chp, int argc, char *argv[]) {
             chprintf(chp, "led OFF\n\r");
         } else if(argv[0][0] == 't'){
             palTogglePad(GPIOA,3);
-            chprintf(chp, "led TOGGLE\n\r");
+            chprintf(chp, led_toggle_text);
+        } else if(strcmp("-h",argv[0])==0){
+            chprintf(chp, led_usage);
         }else {
             chprintf(chp, "%c is not a valid value for led!\n\r",argv[1][0]);
+            chprintf(chp, led_usage);
         }
-    } else {
+    } else if(argc == 0){
+        palTogglePad(GPIOA,3);
+        chprintf(chp, led_toggle_text);
+    }else {
         if(argc >= 2){chprintf(chp, "too many arguments!\n\r");}
-        chprintf(chp, "usage: led <led_state>\n\r\tled_state: 0=OFF 1=ON t=TOGGLE\n\r");
+        //chprintf(chp, led_usage);
     }
 }
 static void cmd_loop(BaseSequentialStream *chp, int argc, char *argv[]) {
