@@ -1,6 +1,6 @@
 
-#ifndef _M25_H_
-#define _M25_H_
+#ifndef _M25_BASE_H_
+#define _M25_BASE_H_
 
 
 

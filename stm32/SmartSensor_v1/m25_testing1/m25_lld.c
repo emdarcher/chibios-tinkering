@@ -25,7 +25,7 @@
 #include "ch.h"
 #include "hal.h"
 
-#if HAL_USE_M25 || defined(__DOXYGEN__)
+//#if HAL_USE_M25 || defined(__DOXYGEN__)
 
 /*===========================================================================*/
 /* Driver local definitions.                                                 */
@@ -117,6 +117,6 @@ void m25_lld_stop(M25Driver *m25p) {
   }
 }
 
-#endif /* HAL_USE_M25 */
+//#endif /* HAL_USE_M25 */
 
 /** @} */

@@ -25,7 +25,7 @@
 #ifndef _M25_LLD_H_
 #define _M25_LLD_H_
 
-#if HAL_USE_M25 || defined(__DOXYGEN__)
+//#if HAL_USE_M25 || defined(__DOXYGEN__)
 
 /*===========================================================================*/
 /* Driver constants.                                                         */
@@ -44,7 +44,7 @@
  * @details If set to @p TRUE the support for M251 is included.
  */
 #if !defined(PLATFORM_M25_USE_M251) || defined(__DOXYGEN__)
-#define PLATFORM_M25_USE_M251             FALSE
+#define PLATFORM_M25_USE_M251             TRUE
 #endif
 /** @} */
 
@@ -66,7 +66,8 @@ typedef struct M25Driver M25Driver;
  * @note    It could be empty on some architectures.
  */
 typedef struct {
-
+    SPIDriver *spip;
+    const SPIConfig *spicfg;
 } M25Config;
 
 /**
@@ -108,6 +109,6 @@ extern "C" {
 
 #endif /* HAL_USE_M25 */
 
-#endif /* _M25_LLD_H_ */
+//#endif /* _M25_LLD_H_ */
 
 /** @} */
