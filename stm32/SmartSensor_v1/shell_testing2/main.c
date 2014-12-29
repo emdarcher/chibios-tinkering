@@ -98,7 +98,19 @@ static __attribute__((noreturn)) msg_t SerOutThr1(void *arg){
 }
 #endif
 
-static uint8_t str_is_valid_num(char * str);
+static const char invalid_num_str[] = "%s is not a valid number!\n\r";
+static const char invalid_arg_str[] = "%s is an invalid argument!\n\r";
+
+static uint8_t str_is_valid_num(char * str){
+    uint8_t nI;
+    for(nI=0;nI<strlen(str);nI++){
+        char chk = str[nI];
+        if(!((chk>=48)&&(chk<=57))){
+            return 0;
+        }
+    }
+    return 1;
+}
 
 static void cmd_accel(BaseSequentialStream *chp, int argc, char *argv[]) {
     #if !USE_I2C_POLL_THD 
@@ -116,13 +128,13 @@ static void cmd_accel(BaseSequentialStream *chp, int argc, char *argv[]) {
 static void cmd_color(BaseSequentialStream *chp, int argc, char *argv[]) {
     uint32_t loop_times=1;
     uint32_t loop_delay_ms=100;
-    uint8_t cmd_error=0;
-    char usage[] = "usage: color [ -h | -l <loop_times>]\n\r"
+    const char usage[] = "usage: color [ -h | -l <loop_times>]\n\r"
                     "\t-h: prints help\n\r"
                     "\t-l <loop_times> : loops the amount of times\n\r";
     if(argc > 0){
         if(strcmp("-l", argv[0])==0){
             if(argc > 1){
+                #if 0
                 uint8_t nI;
                 for(nI=0;nI<strlen(argv[1]);nI++){
                     char chk = argv[1][nI];
@@ -133,12 +145,27 @@ static void cmd_color(BaseSequentialStream *chp, int argc, char *argv[]) {
                         break;
                     }
                 }
-                if(!cmd_error){ 
-                    loop_times = atol(argv[1]); 
-                    cmd_error=0; 
-                }
-                if(argc > 2){
-                        
+                #endif
+                
+                if(str_is_valid_num(argv[1])){ 
+                    loop_times = atol(argv[1]);
+                    if(argc > 2){
+                        if(strcmp("-s", argv[2])==0){
+                            if(argc > 3){
+                                if(str_is_valid_num(argv[3])){
+                                    loop_delay_ms = atol(argv[3]);
+                                } else {
+                                    chprintf(chp,invalid_num_str,argv[3]);
+                                }
+                            } else {
+                                chprintf(chp,"please enter millisecond delay\n\r");
+                            }
+                        } else {
+                            chprintf(chp,invalid_arg_str,argv[2]);
+                        }
+                    }  
+                } else {
+                    chprintf(chp,invalid_num_str, argv[1]);
                 }
             } else {
                 chprintf(chp, "please enter a number of times to loop\n\r");
@@ -147,11 +174,12 @@ static void cmd_color(BaseSequentialStream *chp, int argc, char *argv[]) {
             chprintf(chp, "printing help:\n\r");
             chprintf(chp, usage);
         } else {
-            chprintf(chp, "%s is an invalid argument!\n\r", argv[0]);
+            chprintf(chp, invalid_arg_str, argv[0]);
             chprintf(chp, usage);
         }
     }
-    chprintf(chp, "looping %U times:\n\r", loop_times);
+    chprintf(chp, "looping %U times with delay of %U milliseconds:\n\r", 
+        loop_times,loop_delay_ms);
     while(loop_times--){
         #if !USE_I2C_POLL_THD 
         request_color_data();
