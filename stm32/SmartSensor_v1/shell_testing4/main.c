@@ -391,9 +391,10 @@ int main(void){
         //chThdSleepMilliseconds(500);
         //palClearPad(GPIOA, 3);
         //chThdSleepMilliseconds(500);
-        if (!sh)
+        if (!sh){
+            chprintf((BaseSequentialStream *)&SD1,"Starting ChibiOS/RT Shell\n\r");
             sh = shellCreate(&shCfg, SHELL_WA_SIZE, NORMALPRIO+1);
-        else if (chThdTerminated(sh)) {
+        } else if (chThdTerminated(sh)) {
             chThdRelease(sh);
             sh = NULL;
         }
