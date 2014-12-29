@@ -283,10 +283,17 @@ if(argc > 0){
     }
     chprintf(chp, "looping %s command %U times with delay of %U milliseconds:\n\r", 
         argv[0],loop_times,loop_delay_ms);
-
+    char c;
     while(loop_times--){
         call_cmd_from_index(chp,pass_argc,pass_argv,cmd_i);        
         chThdSleepMilliseconds(loop_delay_ms);
+        //if(sdGetTimeout((SerialDriver *)chp, TIME_IMMEDIATE) == 'q'){break;}
+        #if 1
+        //if(chSequentialStreamRead(chp, (uint8_t *)&c, 1)!=0){  
+        if(sdReadTimeout((SerialDriver *)chp,(uint8_t *)&c,1,TIME_IMMEDIATE)!=0){
+          if((c==3)||(c=='q')){break;}
+        }
+        #endif
     } 
 
     } else if(strcmp("-h",argv[0])==0){
