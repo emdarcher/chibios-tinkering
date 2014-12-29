@@ -98,6 +98,8 @@ static __attribute__((noreturn)) msg_t SerOutThr1(void *arg){
 }
 #endif
 
+static uint8_t str_is_valid_num(char * str);
+
 static void cmd_accel(BaseSequentialStream *chp, int argc, char *argv[]) {
     #if !USE_I2C_POLL_THD 
     request_acceleration_data();
@@ -112,14 +114,55 @@ static void cmd_accel(BaseSequentialStream *chp, int argc, char *argv[]) {
         accel_x,accel_y,accel_z);
 }
 static void cmd_color(BaseSequentialStream *chp, int argc, char *argv[]) {
-    #if !USE_I2C_POLL_THD 
-    request_color_data();
-    #endif
-    chSysLockFromIsr();
-    get_lx_from_cnts();
-    chSysUnlockFromIsr();
-    chprintf(chp, "color_lx: y=%U\tr=%U\tg=%U\tb=%U\n\r",
-        y_lx_val,r_lx_val,g_lx_val,b_lx_val);
+    uint32_t loop_times=1;
+    uint32_t loop_delay_ms=100;
+    uint8_t cmd_error=0;
+    char usage[] = "usage: color [ -h | -l <loop_times>]\n\r"
+                    "\t-h: prints help\n\r"
+                    "\t-l <loop_times> : loops the amount of times\n\r";
+    if(argc > 0){
+        if(strcmp("-l", argv[0])==0){
+            if(argc > 1){
+                uint8_t nI;
+                for(nI=0;nI<strlen(argv[1]);nI++){
+                    char chk = argv[1][nI];
+                    /* checks for any non-numerical characters in the argument */
+                    if(!((chk>=48)&&(chk<=57))){
+                        chprintf(chp,"%s is not a valid number!\n\r", argv[1]);
+                        cmd_error=1;
+                        break;
+                    }
+                }
+                if(!cmd_error){ 
+                    loop_times = atol(argv[1]); 
+                    cmd_error=0; 
+                }
+                if(argc > 2){
+                        
+                }
+            } else {
+                chprintf(chp, "please enter a number of times to loop\n\r");
+            }
+        } else if(strcmp("-h",argv[0])==0){
+            chprintf(chp, "printing help:\n\r");
+            chprintf(chp, usage);
+        } else {
+            chprintf(chp, "%s is an invalid argument!\n\r", argv[0]);
+            chprintf(chp, usage);
+        }
+    }
+    chprintf(chp, "looping %U times:\n\r", loop_times);
+    while(loop_times--){
+        #if !USE_I2C_POLL_THD 
+        request_color_data();
+        #endif
+        chSysLockFromIsr();
+        get_lx_from_cnts();
+        chSysUnlockFromIsr();
+        chprintf(chp, "color_lx: y=%U\tr=%U\tg=%U\tb=%U\n\r",
+            y_lx_val,r_lx_val,g_lx_val,b_lx_val);
+        chThdSleepMilliseconds(loop_delay_ms);
+    }
 }
 
 static void cmd_led(BaseSequentialStream *chp, int argc, char *argv[]) {
