@@ -63,11 +63,12 @@ static uint8_t flash_buff[256]; /* note: for sst25 */
 
 static void print_buff16(uint8_t buf[16])
 {
-	chprintf(&SD1, "buff[16]:");
+	chprintf((BaseSequentialStream *)&SD1, "buff[16]:");
 	int i;
     for ( i = 0; i < 16; i++)
-		chprintf(&SD1, " %02x", buf[i]);
-	sdPut(&SD1, '\n\r');
+		chprintf((BaseSequentialStream *)&SD1, " %02x", buf[i]);
+	sdPut(&SD1, '\n');
+	sdPut(&SD1, '\r');
 }
 
 #if USE_BLINKER_THD 
@@ -81,9 +82,9 @@ static __attribute__((noreturn))  msg_t Thread1(void *arg) {
   (void)arg;
   chRegSetThreadName("blinker");
   while (TRUE) {
-    palClearPad(GPIOA, GPIOA_PA2);
+    palClearPad(G_LED_PORT,G_LED_PIN);
     chThdSleepMilliseconds(500);
-    palSetPad(GPIOA, GPIOA_PA2);
+    palSetPad(G_LED_PORT, G_LED_PIN);
     chThdSleepMilliseconds(500);
   }
 }
