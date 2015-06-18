@@ -214,10 +214,11 @@ static const char invalid_num_str[] = "%s is not a valid number!\n\r";
 static const char invalid_arg_str[] = "%s is an invalid argument!\n\r";
 
 static const char loop_usage[] = "loop usage: loop <command> "
-                    "[ -h | -l [<loop_times> | -i ]]\n\r"
+                    "[ -h | -l [<loop_times> | -i | -s]]\n\r"
                     "\t-h: prints help\n\r"
                     "\t-l <loop_times> : loops the amount of times\n\r"
                     "\t-l -i : loops infinitely\n\r"
+                    "\t-s <milliseconds. : delays an amount of milliseconds between loops\n\r"
                     "looping can be halted by pressing CTRL+C or 'q' \n\r";
 
 
