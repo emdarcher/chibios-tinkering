@@ -37,6 +37,7 @@
 
 volatile uint16_t glbl_digs_var = 1234;
 
+
 static inline void init_SPI1(void);
 //void init_digit_pins(void);
 void write_SPI1(uint8_t out_byte);
@@ -410,7 +411,7 @@ int main(void){
      * Initializes the SPI driver 1.
      */
     spiStart(&SPID1, &spicfg);
-    
+    init_93c46_pins(); 
 
     chThdCreateStatic(waBlinker1, sizeof(waBlinker1), NORMALPRIO, Blinker1, NULL);
     chThdCreateStatic(waSegThread1, sizeof(waSegThread1), NORMALPRIO+2, SegThread1, NULL);
