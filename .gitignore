@@ -8,3 +8,5 @@
 *.eep
 *.swp
 *.obj
+*.dmp
+*.map
