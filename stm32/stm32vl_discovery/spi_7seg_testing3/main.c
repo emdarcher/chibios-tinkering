@@ -9,11 +9,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "shell.h"
-#include "chprintf.h"
 #include "ch.h"
 #include "hal.h"
 #include "test.h"
+#include "shell.h"
+#include "chprintf.h"
 #include "seven_segs.h"
 
 #define MY_ABS(a) (((a)>=0) ? (a) : (0L-(a)))  
@@ -33,6 +33,8 @@
 #define CMD_LED_NUM  8
 #define BLINKER_LED_GPIO GPIOC
 #define BLINKER_LED_NUM 9
+
+volatile uint16_t glbl_digs_var = 1234;
 
 static inline void init_SPI1(void);
 //void init_digit_pins(void);
@@ -168,7 +170,7 @@ static __attribute__((noreturn)) msg_t SegThread1(void *arg){
         //write_digit(2,1);
         //write_digit(3,2);
         //write_digit(4,3);
-        write_number(1234);
+        write_number(glbl_digs_var);
     }
 }
 
@@ -176,8 +178,8 @@ static __attribute__((noreturn)) msg_t SegThread1(void *arg){
  * Red LED blinker thread, times are in milliseconds.
  */
 
-static WORKING_AREA(waThread1, 32);
-static __attribute__((noreturn))  msg_t Thread1(void *arg) {
+static WORKING_AREA(waBlinker1, 32);
+static __attribute__((noreturn))  msg_t Blinker1(void *arg) {
 
   (void)arg;
   chRegSetThreadName("blinker");
@@ -192,10 +194,11 @@ static __attribute__((noreturn))  msg_t Thread1(void *arg) {
 static const char newline[2] = "\n\r";
 
 #define CMD_STR_LED "led"
+#define CMD_STR_LOOP "loop"
 
-enum{CMD_LED};
+enum{CMD_LED,CMD_LOOP};
 const char * cmd_name_strings[] = {
-CMD_STR_LED,
+CMD_STR_LED, CMD_STR_LOOP,
 };
 
 
@@ -208,6 +211,13 @@ static void call_cmd_from_index( BaseSequentialStream *chp,
 
 static const char invalid_num_str[] = "%s is not a valid number!\n\r";
 static const char invalid_arg_str[] = "%s is an invalid argument!\n\r";
+
+static const char loop_usage[] = "loop usage: loop <command> "
+                    "[ -h | -l [<loop_times> | -i ]]\n\r"
+                    "\t-h: prints help\n\r"
+                    "\t-l <loop_times> : loops the amount of times\n\r"
+                    "\t-l -i : loops infinitely\n\r"
+                    "looping can be halted by pressing CTRL+C or 'q' \n\r";
 
 
 static void cmd_led(BaseSequentialStream *chp, int argc, char *argv[]) {
@@ -358,18 +368,27 @@ static __attribute__((noreturn)) msg_t PWMThread2(void *arg){
 }
 #endif
 
+/* config for the serial stuff */
+static SerialConfig sd1conf = {
+38400, /* baud */
+0,0,0,
+};
+
 int main(void){
     
     halInit();
     chSysInit();
- 
+
+    Thread *sh = NULL;
+    sdStart(&SD1, &sd1conf);
+
     /*
      * Initializes the SPI driver 1.
      */
     spiStart(&SPID1, &spicfg);
     
 
-    chThdCreateStatic(waThread1, sizeof(waThread1), NORMALPRIO, Thread1, NULL);
+    chThdCreateStatic(waBlinker1, sizeof(waBlinker1), NORMALPRIO, Blinker1, NULL);
     chThdCreateStatic(waSegThread1, sizeof(waSegThread1), NORMALPRIO+2, SegThread1, NULL);
     //chThdCreateStatic(waThread2, sizeof(waThread2), NORMALPRIO+2, Thread2, NULL);
     //chThdCreateStatic(waPWMThread2, sizeof(waPWMThread2), NORMALPRIO+1, PWMThread2, NULL);    
@@ -377,15 +396,23 @@ int main(void){
     init_digit_pins();
     init_SPI1();
 
-    palSetPadMode(GPIOC, 8, PAL_MODE_OUTPUT_PUSHPULL);
-    palSetPadMode(GPIOC, 9, PAL_MODE_OUTPUT_PUSHPULL);
+    palSetPadMode(CMD_LED_GPIO, CMD_LED_NUM, PAL_MODE_OUTPUT_PUSHPULL);
+    palSetPadMode(BLINKER_LED_GPIO, BLINKER_LED_NUM, PAL_MODE_OUTPUT_PUSHPULL);
 //TestThread(&SD1);
+    shellInit();    
 
     while (TRUE){
-        palSetPad(GPIOC, 8);
+        if (!sh){
+            chprintf((BaseSequentialStream *)&SD1,"Starting ChibiOS/RT Shell\n\r");
+            sh = shellCreate(&shCfg, SHELL_WA_SIZE, NORMALPRIO+1);
+        } else if (chThdTerminated(sh)) {
+            chThdRelease(sh);
+            sh = NULL;
+        }
+        //palSetPad(GPIOC, 8);
         //TestThread(&SD1);
-        chThdSleepMilliseconds(500);
-        palClearPad(GPIOC, 8);
-        chThdSleepMilliseconds(500);
+        //chThdSleepMilliseconds(500);
+        //palClearPad(GPIOC, 8);
+        //chThdSleepMilliseconds(500);
     }
 }
