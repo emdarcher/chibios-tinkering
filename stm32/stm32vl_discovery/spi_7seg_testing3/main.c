@@ -195,10 +195,11 @@ static const char newline[2] = "\n\r";
 
 #define CMD_STR_LED "led"
 #define CMD_STR_LOOP "loop"
+#define CMD_STR_SEGDISP "segdisp"
 
-enum{CMD_LED,CMD_LOOP};
+enum{CMD_LED,CMD_LOOP,CMD_SEGDISP};
 const char * cmd_name_strings[] = {
-CMD_STR_LED, CMD_STR_LOOP,
+CMD_STR_LED, CMD_STR_LOOP, CMD_STR_SEGDISP,
 };
 
 
@@ -329,6 +330,23 @@ if(argc > 0){
 
 }
 
+static void cmd_segdisp(BaseSequentialStream *chp, int argc, char *argv[]){
+    const char segdisp_usage[] = "usage: segdisp <numstring> | -h \n\r";
+    uint32_t disp_num = 0; 
+    if((argc > 0) && (argc <2)){
+        if((str_is_valid_num(argv[0]) && (sizeof(argv[0])<=4))){
+            disp_num = atol(argv[0]); 
+        } else {
+            chprintf(chp,"%s is not a valid number or is has many characters\n\r", argv[0]);
+            chprintf(chp,segdisp_usage);
+        }
+    } else {
+       chprintf(chp,segdisp_usage);
+    }
+    glbl_digs_var = (uint16_t)disp_num;
+
+}
+
 static void call_cmd_from_index( BaseSequentialStream *chp,
                  int argc, char *argv[], uint8_t cmd_index){
     switch (cmd_index){
@@ -338,12 +356,16 @@ static void call_cmd_from_index( BaseSequentialStream *chp,
     case CMD_LOOP:
         cmd_loop(chp, argc, argv);
         break;
+    case CMD_SEGDISP:
+        cmd_segdisp(chp, argc, argv);
+        break;
     }
 }
 
 static const ShellCommand shCmds[] = {
     {CMD_STR_LED,cmd_led},   
     {CMD_STR_LOOP,cmd_loop},
+    {CMD_STR_SEGDISP,cmd_segdisp},
     {NULL, NULL}
 };
 static const ShellConfig shCfg = {

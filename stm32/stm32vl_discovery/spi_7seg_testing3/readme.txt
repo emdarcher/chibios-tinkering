@@ -1,18 +1,15 @@
-*****************************************************************************
-** ChibiOS/RT port for ARM-Cortex-M3 STM32F100.                            **
-*****************************************************************************
 
 ** TARGET **
 
 The demo runs on a STM32VL_DISCOVERY board.
 
-** The Demo **
+** The Program **
 
-This demo flashes the two on-board LEDs attached to PC8 and PC9
-from within separate threads
+This Program flashes the on-board LEDs attached to PC9 in a thread.
 This program also controls a 4-digit mulitiplexed 7-segment
 display using a shift register, which is manipulated via SPI1,
 and 4 NPN transistors triggered by PC0-3.
+This test using a shell prompt and custom command to change the ouput on the seven segment display.
 
 ** Build Procedure **
 
