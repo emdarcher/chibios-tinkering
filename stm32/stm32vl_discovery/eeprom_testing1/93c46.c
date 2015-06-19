@@ -13,34 +13,39 @@ void shift_out_bit_93c46(uint8_t bit){
     /* shifts out the bit value in "bit" to MOSI */
     E_93C46_CLR_SK();
     palWritePad(E_93C46_MISO_GPIO,E_93C46_MOSI_NUM,bit);
-    //chThdSleepMicroseconds(E_93C46_PULSE_DELAY_US);
-    int i;for(i=0;i<1000;i++);
+    chThdSleepMicroseconds(E_93C46_PULSE_DELAY_US);
+    //int i;for(i=0;i<1000;i++);
     E_93C46_SET_SK();
 }
 
 uint8_t shift_in_bit_93c46(void){
     /* toggles the SK and reads in the bit value on MISO */
     E_93C46_CLR_SK();
-    //chThdSleepMicroseconds(E_93C46_PULSE_DELAY_US);
+    chThdSleepMicroseconds(E_93C46_PULSE_DELAY_US);
+    //int i;for(i=0;i<1000;i++);
     E_93C46_SET_SK();
     return palReadPad(E_93C46_MISO_GPIO,E_93C46_MISO_NUM);
 }
 void send_cmd_93c46(uint8_t opcode, uint8_t addr){
 //sends an opcode and address in the command format for the 93c46
+    chSysLockFromIsr();
     shift_out_bit_93c46(E_93C46_START_BIT); //start bit
     uint16_t temp_bits = ((opcode<<E_93C46_ADDR_LEN) | addr);
     uint8_t temp_len = E_93C46_ADDR_LEN + 2;
     while(temp_len--){
         shift_out_bit_93c46((temp_bits>>temp_len) & 1);
     }
+    chSysUnlockFromIsr();
 }
 
 void shift_word_93c46(uint16_t out_word){
 //shifts out a word (16-bits) to the 93c46
+    chSysLockFromIsr();
     uint8_t temp_len = 16;
     while(temp_len--){
         shift_out_bit_93c46((out_word>>temp_len) & 1);
     }
+    chSysUnlockFromIsr();
 }
 
 void write_enable_93c46(void){
@@ -97,11 +102,13 @@ uint16_t read_word_93c46(uint8_t addr){
     uint16_t temp_store = 0;
     E_93C46_SET_CS();
     send_cmd_93c46(E_93C46_READ,addr);
+    chSysLockFromIsr();
     shift_in_bit_93c46();//get the dummy bit out of there
     uint8_t temp_len = 16;
     while(temp_len--){
         temp_store |= (uint16_t)(shift_in_bit_93c46()<<temp_len);
     }
+    chSysUnlockFromIsr();
     E_93C46_CLR_CS();
     E_93C46_CLR_SK();
     return temp_store;
