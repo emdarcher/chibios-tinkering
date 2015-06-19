@@ -51,21 +51,21 @@ void shift_word_93c46(uint16_t out_word){
 void write_enable_93c46(void){
     E_93C46_SET_CS();
     send_cmd_93c46(E_93C46_EWEN,E_93C46_EWEN_ADDR);
-    E_93C46_CLR_CS();
     E_93C46_CLR_SK();
+    E_93C46_CLR_CS();
 }
 void write_disable_93c46(void){
     E_93C46_SET_CS();
     send_cmd_93c46(E_93C46_EWDS,E_93C46_EWDS_ADDR);
-    E_93C46_CLR_CS();
     E_93C46_CLR_SK();
+    E_93C46_CLR_CS();
 }
 void erase_all_93c46(void){
 //erases all addresses
     E_93C46_SET_CS();
     send_cmd_93c46(E_93C46_ERAL,E_93C46_ERAL_ADDR);
-    E_93C46_CLR_CS();
     E_93C46_CLR_SK();
+    E_93C46_CLR_CS();
     poll_93c46();
 }
                                                
@@ -74,8 +74,8 @@ void write_93c46(uint8_t addr, uint16_t data){
     E_93C46_SET_CS();
     send_cmd_93c46(E_93C46_WRITE,addr);
     shift_word_93c46(data);
-    E_93C46_CLR_CS();
     E_93C46_CLR_SK();
+    E_93C46_CLR_CS();
     poll_93c46();
 }
 
@@ -84,8 +84,8 @@ void write_all_93c46(uint16_t data){
     E_93C46_SET_CS();
     send_cmd_93c46(E_93C46_WRAL,E_93C46_WRAL_ADDR);
     shift_word_93c46(data);
-    E_93C46_CLR_CS();
     E_93C46_CLR_SK();
+    E_93C46_CLR_CS();
     poll_93c46();
 }
 
@@ -93,8 +93,8 @@ void erase_addr_93c46(uint8_t addr){
 //erases from an "addr" 
     E_93C46_SET_CS();
     send_cmd_93c46(E_93C46_ERASE,addr);
-    E_93C46_CLR_CS();
     E_93C46_CLR_SK();
+    E_93C46_CLR_CS();
     poll_93c46();
 }
 
