@@ -2,6 +2,7 @@
 #include "93c46.h"
 
 inline void init_93c46_pins(void){
+    /* initializes the pins to use for soft SPI to the 93c46 */
     palSetPadMode(E_93C46_CS_GPIO,E_93C46_CS_NUM,PAL_MODE_OUTPUT_PUSHPULL);
     palSetPadMode(E_93C46_SK_GPIO,E_93C46_SK_NUM,PAL_MODE_OUTPUT_PUSHPULL);
     palSetPadMode(E_93C46_MOSI_GPIO,E_93C46_MOSI_NUM,PAL_MODE_OUTPUT_PUSHPULL);
@@ -12,12 +13,15 @@ void shift_out_bit_93c46(uint8_t bit){
     /* shifts out the bit value in "bit" to MOSI */
     E_93C46_CLR_SK();
     palWritePad(E_93C46_MISO_GPIO,E_93C46_MOSI_NUM,bit);
+    //chThdSleepMicroseconds(E_93C46_PULSE_DELAY_US);
+    int i;for(i=0;i<1000;i++);
     E_93C46_SET_SK();
 }
 
 uint8_t shift_in_bit_93c46(void){
     /* toggles the SK and reads in the bit value on MISO */
     E_93C46_CLR_SK();
+    //chThdSleepMicroseconds(E_93C46_PULSE_DELAY_US);
     E_93C46_SET_SK();
     return palReadPad(E_93C46_MISO_GPIO,E_93C46_MISO_NUM);
 }
@@ -46,45 +50,47 @@ void write_enable_93c46(void){
     E_93C46_CLR_SK();
 }
 void write_disable_93c46(void){
-
     E_93C46_SET_CS();
     send_cmd_93c46(E_93C46_EWDS,E_93C46_EWDS_ADDR);
     E_93C46_CLR_CS();
     E_93C46_CLR_SK();
 }
 void erase_all_93c46(void){
-
+//erases all addresses
     E_93C46_SET_CS();
     send_cmd_93c46(E_93C46_ERAL,E_93C46_ERAL_ADDR);
     E_93C46_CLR_CS();
     E_93C46_CLR_SK();
+    poll_93c46();
 }
                                                
 void write_93c46(uint8_t addr, uint16_t data){
-    
+//writes "data" to an "addr" 
     E_93C46_SET_CS();
     send_cmd_93c46(E_93C46_WRITE,addr);
     shift_word_93c46(data);
     E_93C46_CLR_CS();
     E_93C46_CLR_SK();
-
+    poll_93c46();
 }
 
 void write_all_93c46(uint16_t data){
-
+//writes "data" to all addresses
     E_93C46_SET_CS();
     send_cmd_93c46(E_93C46_WRAL,E_93C46_WRAL_ADDR);
     shift_word_93c46(data);
     E_93C46_CLR_CS();
     E_93C46_CLR_SK();
+    poll_93c46();
 }
 
 void erase_addr_93c46(uint8_t addr){
-    
+//erases from an "addr" 
     E_93C46_SET_CS();
     send_cmd_93c46(E_93C46_ERASE,addr);
     E_93C46_CLR_CS();
     E_93C46_CLR_SK();
+    poll_93c46();
 }
 
 uint16_t read_word_93c46(uint8_t addr){

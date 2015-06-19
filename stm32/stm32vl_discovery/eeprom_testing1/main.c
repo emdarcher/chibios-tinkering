@@ -1,5 +1,5 @@
 /*
- *@author Ethan Durrant 2014
+ *@author Ethan Durrant 2015
  *@file main.c
  *@breif main code source
  */
@@ -35,6 +35,7 @@
 #define BLINKER_LED_GPIO GPIOC
 #define BLINKER_LED_NUM 9
 
+
 volatile uint16_t glbl_digs_var = 1234;
 
 
@@ -60,7 +61,7 @@ static inline void init_SPI1(void){
     palSetPadMode(GPIOA, 5, PAL_MODE_STM32_ALTERNATE_PUSHPULL);
     palSetPadMode(GPIOA, 7, PAL_MODE_STM32_ALTERNATE_PUSHPULL);
 
-    palSetPadMode(GPIOA,3,PAL_MODE_OUTPUT_PUSHPULL);
+    //palSetPadMode(GPIOA,3,PAL_MODE_OUTPUT_PUSHPULL);
 }
 
 /* spi callback proto */
@@ -114,12 +115,10 @@ static uint8_t str_is_valid_num(char * str){
 
 void write_digit(int8_t num, uint8_t dig){
      
-    uint8_t out_bytes[1]; /*= {
-        (((num<10)&&(num>=0)) ? number_seg_bytes[num] : number_seg_bytes[10]),
-    };*/
+    uint8_t out_bytes[1];     
     out_bytes[0] =(((num<10)&&(num>=0)) ? number_seg_bytes[num] : number_seg_bytes[10]); 
     chSysLockFromIsr();
-    palClearPad(GPIOA,3);
+    //palClearPad(GPIOA,3);
     /* SPI slave selection and transmission start.*/
     spiSelectI(&SPID1);
     //spiStartSendI(&SPID1, 1, out_bytes);
@@ -133,7 +132,7 @@ void write_digit(int8_t num, uint8_t dig){
         }
     }
     spiUnselectI(&SPID1);
-    palSetPad(GPIOA, 3);
+    //palSetPad(GPIOA, 3);
     chSysUnlockFromIsr();
     //while(SPI_done == FALSE);
     chThdSleepMicroseconds(DIG_SWITCH_DELAY_US);
@@ -161,23 +160,17 @@ void write_number(int16_t number){
         }
 }
 
-
-
 static WORKING_AREA(waSegThread1,32);
 static __attribute__((noreturn)) msg_t SegThread1(void *arg){
     (void)arg;
     chRegSetThreadName("seg thread");
     while(TRUE){
-        //write_digit(1,0);
-        //write_digit(2,1);
-        //write_digit(3,2);
-        //write_digit(4,3);
         write_number(glbl_digs_var);
     }
 }
 
 /*
- * Red LED blinker thread, times are in milliseconds.
+ * LED blinker thread, times are in milliseconds.
  */
 
 static WORKING_AREA(waBlinker1, 32);
@@ -198,10 +191,11 @@ static const char newline[2] = "\n\r";
 #define CMD_STR_LED "led"
 #define CMD_STR_LOOP "loop"
 #define CMD_STR_SEGDISP "segdisp"
+#define CMD_STR_TEST_93C46 "test_93c46"
 
-enum{CMD_LED,CMD_LOOP,CMD_SEGDISP};
+enum{CMD_LED,CMD_LOOP,CMD_SEGDISP,CMD_TEST_93C46};
 const char * cmd_name_strings[] = {
-CMD_STR_LED, CMD_STR_LOOP, CMD_STR_SEGDISP,
+CMD_STR_LED, CMD_STR_LOOP, CMD_STR_SEGDISP, CMD_STR_TEST_93C46,
 };
 
 
@@ -220,7 +214,8 @@ static const char loop_usage[] = "loop usage: loop <command> "
                     "\t-h: prints help\n\r"
                     "\t-l <loop_times> : loops the amount of times\n\r"
                     "\t-l -i : loops infinitely\n\r"
-                    "\t-s <milliseconds. : delays an amount of milliseconds between loops\n\r"
+                    "\t-s <milliseconds. : delays an amount of milliseconds"
+                    " between loops\n\r"
                     "looping can be halted by pressing CTRL+C or 'q' \n\r";
 
 
@@ -347,7 +342,27 @@ static void cmd_segdisp(BaseSequentialStream *chp, int argc, char *argv[]){
        chprintf(chp,segdisp_usage);
     }
     glbl_digs_var = (uint16_t)disp_num;
+}
 
+static void cmd_test_93c46(BaseSequentialStream *chp, int argc, char *argv[]) {
+    /*runs basic test of the 93c46 to check library & hardware functionality*/
+    uint16_t test_word = 0xAAAA;
+    uint8_t test_address = 0x00;
+    uint16_t test_read_store =0;
+    chprintf(chp,"running basic test of 93C46 EEPROM\n\r");
+    chprintf(chp,"running write_enable_93c46() to enable writing\n\r");
+    write_enable_93c46();
+    chprintf(chp,"attempting to write %x to memory address %x \n\r",test_word,test_address);
+    write_93c46(test_address,test_word);
+    chprintf(chp,"reading from address %x\n\r",test_address);
+    test_read_store = read_word_93c46(test_address);
+    chprintf(chp,"word read from address %x is %x\n\r",test_address,test_read_store);
+    chprintf(chp,"now trying to erase content of address %x, the reading it\n\r",test_address);
+    erase_addr_93c46(test_address);
+    test_read_store = read_word_93c46(test_address);
+    chprintf(chp,"content read from address %x is %x\n\r",test_address,test_read_store);
+    chprintf(chp,"now disabling write with write_disable_93c46()\n\r");
+    write_disable_93c46();
 }
 
 static void call_cmd_from_index( BaseSequentialStream *chp,
@@ -362,6 +377,9 @@ static void call_cmd_from_index( BaseSequentialStream *chp,
     case CMD_SEGDISP:
         cmd_segdisp(chp, argc, argv);
         break;
+    case CMD_TEST_93C46:
+        cmd_test_93c46(chp, argc, argv);
+        break;
     }
 }
 
@@ -369,29 +387,13 @@ static const ShellCommand shCmds[] = {
     {CMD_STR_LED,cmd_led},   
     {CMD_STR_LOOP,cmd_loop},
     {CMD_STR_SEGDISP,cmd_segdisp},
+    {CMD_STR_TEST_93C46,cmd_test_93c46},
     {NULL, NULL}
 };
 static const ShellConfig shCfg = {
 (BaseSequentialStream *)&SD1,
 shCmds
 };
-
-#if 0
-static WORKING_AREA(waPWMThread2, 32);
-static __attribute__((noreturn)) msg_t PWMThread2(void *arg){
-    (void)arg;
-    chRegSetThreadName("PWM Thread 2");
-    uint16_t pwmVal2 = 1;
-    palSetPadMode(GPIOA, GPIOA_PA1, PAL_MODE_OUTPUT_PUSHPULL);
-    pwmStart(&PWMD2,&pwmcfg2);
-    while(TRUE){
-        if(pwmVal2 >= 1024){ pwmVal2 = 1; }
-        else { pwmVal2 <<= 1; }
-        pwmEnableChannel(&PWMD2,1,pwmVal2);
-        chThdSleepMilliseconds(100);
-    }
-}
-#endif
 
 /* config for the serial stuff */
 static SerialConfig sd1conf = {
@@ -415,8 +417,6 @@ int main(void){
 
     chThdCreateStatic(waBlinker1, sizeof(waBlinker1), NORMALPRIO, Blinker1, NULL);
     chThdCreateStatic(waSegThread1, sizeof(waSegThread1), NORMALPRIO+2, SegThread1, NULL);
-    //chThdCreateStatic(waThread2, sizeof(waThread2), NORMALPRIO+2, Thread2, NULL);
-    //chThdCreateStatic(waPWMThread2, sizeof(waPWMThread2), NORMALPRIO+1, PWMThread2, NULL);    
     
     init_digit_pins();
     init_SPI1();
@@ -434,10 +434,5 @@ int main(void){
             chThdRelease(sh);
             sh = NULL;
         }
-        //palSetPad(GPIOC, 8);
-        //TestThread(&SD1);
-        //chThdSleepMilliseconds(500);
-        //palClearPad(GPIOC, 8);
-        //chThdSleepMilliseconds(500);
     }
 }
