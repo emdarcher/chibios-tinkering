@@ -49,12 +49,14 @@ void shift_word_93c46(uint16_t out_word){
 }
 
 void write_enable_93c46(void){
+//sends the write enable command
     E_93C46_SET_CS();
     send_cmd_93c46(E_93C46_EWEN,E_93C46_EWEN_ADDR);
     E_93C46_CLR_SK();
     E_93C46_CLR_CS();
 }
 void write_disable_93c46(void){
+//sends the write disable command
     E_93C46_SET_CS();
     send_cmd_93c46(E_93C46_EWDS,E_93C46_EWDS_ADDR);
     E_93C46_CLR_SK();
